@@ -51,7 +51,6 @@ function RoadTransportDashboard() {
     category: "",
     date: "",
     description: "",
-
   });
 
   const [filteredComplaints, setFilteredComplaints] = useState([]);

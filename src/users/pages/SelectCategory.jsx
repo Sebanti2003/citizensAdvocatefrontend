@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // import React from "react";
 import { useNavigate } from "react-router-dom";
 import educationImage from "@/assets/education.png";
