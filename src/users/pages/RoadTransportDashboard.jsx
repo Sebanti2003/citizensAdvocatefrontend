@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 function RoadTransportDashboard() {
   const transportData = {
@@ -25,7 +26,7 @@ function RoadTransportDashboard() {
     "License & Permit Issues",
     "Pollution & Emission Violations",
     "Road Signage & Traffic Light Malfunctions",
-    "Corruption & Bribery in Transport Department"
+    "Corruption & Bribery in Transport Department",
   ];
 
   const sampleComplaints = {
@@ -44,12 +45,13 @@ function RoadTransportDashboard() {
   };
 
   const [complaint, setComplaint] = useState({
-    transportNumber: "",
-    transportName: "",
+    ministry: "67b0a135a3336b7a78621913", // Fixed static ministry ID
+    transportservicenumber: "",
+    transportservicename: "",
     category: "",
     date: "",
     description: "",
-    document: null,
+
   });
 
   const [filteredComplaints, setFilteredComplaints] = useState([]);
@@ -58,9 +60,9 @@ function RoadTransportDashboard() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "transportNumber") {
-      const transportName = transportData[value] || "";
-      setComplaint({ ...complaint, transportNumber: value, transportName });
+    if (name === "transportservicenumber") {
+      const transportservicename = transportData[value] || "";
+      setComplaint({ ...complaint, transportservicenumber: value, transportservicename });
 
       if (sampleComplaints[value]) {
         setFilteredComplaints(sampleComplaints[value]);
@@ -79,10 +81,26 @@ function RoadTransportDashboard() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage("✅ Complaint Submitted Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/complaints//ministryofroadtransportandhighwayspostcomplaint",
+        {
+          ...complaint,
+          document: "picimg",
+        }, {
+        withCredentials: true
+      }
+      );
+      console.log('====================================');
+      console.log(response.data);
+      console.log('====================================');
+      setSuccessMessage("✅ Complaint Submitted Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Error submitting complaint:", error);
+    }
   };
 
   return (
@@ -114,8 +132,8 @@ function RoadTransportDashboard() {
             <label className="block text-lg font-medium">Transport Service Number</label>
             <input
               type="text"
-              name="transportNumber"
-              value={complaint.transportNumber}
+              name="transportservicenumber"
+              value={complaint.transportservicenumber}
               onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
               placeholder="Enter Service Number"
@@ -125,17 +143,17 @@ function RoadTransportDashboard() {
             <label className="block text-lg font-medium">Transport Service Name</label>
             <input
               type="text"
-              name="transportName"
-              value={complaint.transportName}
+              name="transportservicename"
+              value={complaint.transportservicename}
+              onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-              readOnly
             />
           </div>
         </div>
 
         {filteredComplaints.length > 0 && (
           <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-            <h3 className="text-lg font-bold mb-4">Existing Complaints for {complaint.transportName}</h3>
+            <h3 className="text-lg font-bold mb-4">Existing Complaints for {complaint.transportservicename}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredComplaints.map((comp, index) => (
                 <motion.div
@@ -159,7 +177,6 @@ function RoadTransportDashboard() {
           </div>
         )}
 
-        {/* Complaint Category Selection */}
         <div className="mt-4">
           <label className="block text-lg font-medium">Select Complaint Category</label>
           <select
@@ -177,17 +194,15 @@ function RoadTransportDashboard() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-          <div>
-            <label className="block text-lg font-medium">Choose Date</label>
-            <input
-              type="date"
-              name="date"
-              value={complaint.date}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-            />
-          </div>
+        <div className="mt-4">
+          <label className="block text-lg font-medium">Choose Date</label>
+          <input
+            type="date"
+            name="date"
+            value={complaint.date}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
         </div>
 
         <div className="mt-6">
@@ -200,11 +215,6 @@ function RoadTransportDashboard() {
             placeholder="Describe your complaint"
             rows="3"
           />
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Upload Supporting Document</label>
-          <input type="file" className="w-full p-2 border border-gray-300 rounded-lg" />
         </div>
 
         <button
