@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { ministryofrailwayscomplaints, ministryofrailwayscategories } from "../data/complaints";
 import { FaPhone, FaMicrophone, FaPaperclip, FaTimes, FaPaperPlane } from "react-icons/fa";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const MinistryofRailways = () => {
     const { gov_id } = useParams();
@@ -33,11 +34,42 @@ const MinistryofRailways = () => {
         setIsChatOpen(false);
         setResponseText("");
     };
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const response = await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
+            console.log(response.data);
+            navigate(`/govt/login`);
+        } catch (error) {
+            console.error(error);
+            setError(error.response?.data?.message || 'Error logging out');
+        } finally {
+            setLoading(false);
+        }
+
+    };
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-gray-900"></div>
+            </div>
+        )
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-12 flex flex-col items-center">
-            {/* Header */}
-            <div className="text-center flex flex-col items-center justify-center gap-4">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-12 flex flex-col items-center ">
+            <div className="text-center flex flex-col items-center justify-center gap-4 w-full">
+                <div className="flex justify-end w-full"> <button
+                    className=" bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition"
+                    onClick={handleLogout}
+                >
+                    Logout
+                </button></div>
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
                     Ministry of Railways 🚆
                 </h1>
@@ -63,14 +95,15 @@ const MinistryofRailways = () => {
                     ))}
                 </select>
             </div>
+            <div>{error && <p className="text-red-500">{error}</p>}</div>
 
             {/* Complaints Section */}
             <div className="mt-12 w-full max-w-5xl">
                 <h2 className="text-2xl font-semibold text-gray-800">List of Complaints</h2>
                 <ul className="mt-4 bg-white flex flex-col gap-2 shadow-lg rounded-lg p-6 divide-y divide-gray-200">
                     {complaints.length > 0 ? complaints.map(complaint => (
-                        <li 
-                            key={complaint.id} 
+                        <li
+                            key={complaint.id}
                             className="py-3 px-4 bg-gray-50 border border-gray-200 flex justify-between items-center hover:bg-gray-100 transition rounded-md cursor-pointer"
                             onClick={() => openChat(complaint)}
                         >
@@ -88,9 +121,9 @@ const MinistryofRailways = () => {
 
             {/* Chat Modal */}
             {isChatOpen && (
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.8 }} 
-                    animate={{ opacity: 1, scale: 1 }} 
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
                 >
@@ -113,11 +146,11 @@ const MinistryofRailways = () => {
 
                         {/* Chat Input Section */}
                         <div className="p-4 bg-gray-100 rounded-b-lg flex items-center gap-2">
-                            <input 
-                                type="text" 
-                                className="flex-1 p-2 border border-gray-300 rounded-lg outline-none" 
-                                placeholder="Type your response..." 
-                                value={responseText} 
+                            <input
+                                type="text"
+                                className="flex-1 p-2 border border-gray-300 rounded-lg outline-none"
+                                placeholder="Type your response..."
+                                value={responseText}
                                 onChange={(e) => setResponseText(e.target.value)}
                             />
                             <button className="text-gray-700 hover:text-blue-500 transition">
@@ -129,7 +162,7 @@ const MinistryofRailways = () => {
                             <button className="text-gray-700 hover:text-blue-500 transition">
                                 <FaMicrophone className="text-2xl" />
                             </button>
-                            <button 
+                            <button
                                 className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"
                                 onClick={() => alert("Response Sent!")}
                             >
