@@ -6,11 +6,40 @@ import roadTransportImage from "@/assets/road_transport.png";
 import consumerAffairsImage from "@/assets/consumer_affairs.png";
 import healthFamilyImage from "@/assets/healthy_family.png";
 import womenChildImage from "@/assets/women_child.png";
-import { motion } from "framer-motion";  
+import { motion } from "framer-motion";
+import React, { useEffect } from "react";
+import axios from "axios";
 
 function SelectCategory() {
   const navigate = useNavigate();
+  const [name, setName] = React.useState('');
+  const handlelogout = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/user/auth/logout', {
+        withCredentials: true
+      });
+      console.log(response.data);
+      navigate('/user/login');
+    } catch (error) {
+      console.log(error);
 
+    }
+  }
+  useEffect(() => {
+    const fun = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/user/me', {
+          withCredentials: true
+        });
+        console.log(response.data);
+        setName(response.data.user.name);
+      } catch (error) {
+        console.log(error);
+
+      }
+    }
+    fun();
+  }, [])
   const categories = [
     { image: educationImage, label: "Ministry of Education", link: "/EducationDashboard" },
     { image: railwaysImage, label: "Ministry of Railways", link: "/RailwayDashboard" },
@@ -23,6 +52,10 @@ function SelectCategory() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#FF9933] via-[#138808] to-[#FFFFFF]">
       {/* Title */}
+      <div className="flex font-bold justify-end items-center gap-3 w-full">
+        <div className="cursor-pointer" onClick={() => navigate('/user/citizendashboard')}>Profile</div>
+        <div onClick={handlelogout}><button className=" text-lg font-semibold text-white mx-3 bg-red-600 hover:bg-red-700 py-2 px-4 rounded-lg">LOGOUT</button></div>
+      </div>
       <h1 className="text-5xl font-extrabold text-black mb-4">GOVERNMENT OF WEST BENGAL</h1>
 
       {/* Subtitle */}
