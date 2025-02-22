@@ -8,7 +8,7 @@ import MinistryofWomenandChildDevelopment from './government/pages/MinistryofWom
 import MinistryofConsumerAffairsFoodandPublicDistribution from './government/pages/MinistryofConsumerAffairsFoodandPublicDistribution'
 import MinistryofRailways from './government/pages/MinistryofRailways'
 import MinistryofRoadTransportandHighways from './government/pages/MinistryofRoadTransportandHighways'
-import LandingPage from './users/pages/LandingPage'
+ import LandingPage from './users/pages/LandingPage'
 import UserLogin from './users/pages/UserLogin'
 import UserSign from './users/pages/UserSign'
 import GovtLogin from './users/pages/GovtLogin'

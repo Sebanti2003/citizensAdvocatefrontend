@@ -1,19 +1,48 @@
-// src/pages/UserSign.js
-import { useState } from 'react';
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router";
 
 function UserSign() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [state, setState] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [state, setState] = useState("");
+  const [password, setPassword] = useState(""); // ✅ Added password state
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Implement signup logic here
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Phone:', phone);
-    console.log('State:', state);
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await axios.post("http://localhost:3000/api/v1/user/auth/signup", {
+        name,
+        email,
+        phonenumber: phone,
+        state,
+        password, // ✅ Added password in the request body
+      });
+
+      console.log(response.data);
+      setMessage("Signup successful! ✅");
+      setName("");
+      setEmail("");
+      setPhone("");
+      setState("");
+      setPassword(""); // ✅ Reset password field
+
+      navigate("/user/login");
+    } catch (error) {
+      console.error(error);
+      setError(error.response?.data?.message || "Error signing up ❌");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,6 +56,7 @@ function UserSign() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full p-2 mb-4 border border-gray-300 rounded"
+            required
           />
           <input
             type="email"
@@ -34,6 +64,7 @@ function UserSign() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full p-2 mb-4 border border-gray-300 rounded"
+            required
           />
           <input
             type="tel"
@@ -41,6 +72,7 @@ function UserSign() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full p-2 mb-4 border border-gray-300 rounded"
+            required
           />
           <input
             type="text"
@@ -48,13 +80,28 @@ function UserSign() {
             value={state}
             onChange={(e) => setState(e.target.value)}
             className="w-full p-2 mb-4 border border-gray-300 rounded"
+            required
+          />
+          <input
+            type="password" // ✅ Changed to password input type
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)} // ✅ Corrected onChange handler
+            className="w-full p-2 mb-4 border border-gray-300 rounded"
+            required
           />
           <button
             type="submit"
-            className="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            className={`w-full py-2 text-white rounded ${
+              loading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+            }`}
+            disabled={loading}
           >
-            Sign Up
+            {loading ? "Signing Up..." : "Sign Up"}
           </button>
+
+          {error && <div className="text-red-600 mt-2 text-center">{error}</div>}
+          {message && <div className="text-green-600 mt-2 text-center">{message}</div>}
         </form>
       </div>
     </div>

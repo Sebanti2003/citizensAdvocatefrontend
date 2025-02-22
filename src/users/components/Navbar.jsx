@@ -65,10 +65,14 @@ const Navbar = () => {
           </button>
 
           {/* CTA Buttons */}
+<<<<<<< HEAD
           <Link
             to="/user/selectcategory"
             className="px-6 py-3 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition-transform font-semibold"
           >
+=======
+          <Link to="/user/login" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+>>>>>>> main
             📢 File a Complaint
           </Link>
           <Link

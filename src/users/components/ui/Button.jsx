@@ -1,5 +1,6 @@
 import clsx from "clsx";
 
+// eslint-disable-next-line react/prop-types
 const Button = ({ children, variant = "default", className, ...props }) => {
   return (
     <button
