@@ -13,7 +13,7 @@ import DarkModeToggle from "../components/DarkModeToggle";
 const LandingPage = () => {
   return (
     
-    <div className="relative">
+    <div className="relative" >
     
 
       {/* Navbar */}
