@@ -29,7 +29,7 @@ function App() {
       <Routes>
         {/* User side routes */}
         {/* <Route path="/" element={<LandingPage />} /> */}
-        <Route path="/" element={<LandingPage/>} />
+        <Route path="/" element={<CitizenDashboard/>} />
         <Route path="/user/login" element={<UserLogin />} />
         <Route path="/user/signup" element={<UserSign />} />
         <Route path="/govt/login" element={<GovtLogin />} />
