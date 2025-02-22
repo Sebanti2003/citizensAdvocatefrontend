@@ -1,0 +1,129 @@
+// import { motion } from "framer-motion";
+// import { Canvas } from "@react-three/fiber";
+// import { Suspense } from "react";
+// import { OrbitControls } from "@react-three/drei";
+// import Button from "./ui/Button";
+// import ComplaintBox from "./3D/ComplaintBox";
+
+// export default function HeroSection() {
+//   return (
+//     <section
+//       className="w-full h-screen flex flex-col md:flex-row items-center justify-between px-16 py-20 relative overflow-hidden"
+//       style={{
+//         background: "linear-gradient(to bottom, #FF6600, #FFFFFF)", // Deep Orange to White Gradient
+//       }}
+//     >
+//       {/* Glossy Glowing Effect */}
+//       <div
+//         className="absolute inset-0"
+//         style={{
+//           background: "radial-gradient(circle at top, rgba(255, 180, 90, 0.5), transparent 70%)",
+//           opacity: 0.8,
+//           filter: "blur(50px)",
+//         }}
+//       ></div>
+
+//       {/* Left Side Content */}
+//       <motion.div
+//         initial={{ opacity: 0, y: 30 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 0.8 }}
+//         className="md:w-1/2 text-center md:text-left relative z-10 font-['Oswald']"
+//       >
+//         <h1 className="text-[5vw] font-extrabold text-white leading-tight drop-shadow-md uppercase">
+//           Citizens’
+//         </h1>
+//         <h1 className="text-[7vw] font-extrabold text-white leading-tight drop-shadow-lg uppercase">
+//           Advocate
+//         </h1>
+//         <p className="text-[2.5vw] text-white mt-6 font-semibold">
+//           Empowering Citizens, Strengthening Governance.
+//         </p>
+//         <p className="text-[1.5vw] text-white mt-4 max-w-2xl">
+//           A centralized platform for filing complaints across multiple ministries with ease.
+//         </p>
+//         <div className="mt-16 flex gap-12">
+//           <button className="glow-button">📢 File a Complaint</button>
+//           <button className="glow-button outline">📖 Learn More</button>
+//         </div>
+//       </motion.div>
+
+//       {/* Right Side 3D Object */}
+//       <motion.div
+//         className="w-full md:w-1/2 h-[70vh] flex justify-center items-center mt-10 md:mt-0 relative z-10"
+//         whileHover={{ scale: 1.05 }}
+//       >
+//         <Canvas>
+//           <Suspense fallback={null}>
+//             <OrbitControls enableZoom={false} />
+//             <ambientLight intensity={0.6} />
+//             <directionalLight position={[3, 3, 3]} />
+//             <ComplaintBox />
+//           </Suspense>
+//         </Canvas>
+//       </motion.div>
+
+//       {/* Button Styles */}
+//       <style>
+//         {`
+//           @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
+
+//           .glow-button {
+//             padding: 1vw 2vw;
+//             font-size: 1.5vw;
+//             font-weight: bold;
+//             font-family: 'Oswald', sans-serif;
+//             text-transform: uppercase;
+//             color: white;
+//             background-color: #008000;
+//             border: none;
+//             border-radius: 12px;
+//             box-shadow: 0px 0px 20px rgba(0, 128, 0, 0.6);
+//             position: relative;
+//             transition: all 0.3s ease-in-out;
+//             overflow: hidden;
+//           }
+
+//           .glow-button::after {
+//             content: "";
+//             position: absolute;
+//             top: -10%;
+//             left: -100%;
+//             width: 300%;
+//             height: 200%;
+//             background: linear-gradient(120deg, rgba(255, 255, 255, 0.2)30%, transparent 70%);
+//             transform: skewX(-20deg);
+//             transition: all 0.6s ease-in-out;
+//           }
+
+//           .glow-button:hover::after {
+//             left: 100%;
+//           }
+
+//           .glow-button:hover {
+//             background-color: #00A000;
+//             box-shadow: 0px 0px 30px rgba(0, 160, 0, 0.8);
+//             transform: translateY(-3px) scale(1.05);
+//           }
+
+//           .glow-button:active {
+//             transform: scale(0.95);
+//           }
+
+//           .glow-button.outline {
+//             background-color: transparent;
+//             border: 3px solid #008000;
+//             color: #008000;
+//             box-shadow: none;
+//           }
+
+//           .glow-button.outline:hover {
+//             background-color: #008000;
+//             color: white;
+//             box-shadow: 0px 0px 15px rgba(0, 128, 0, 0.6);
+//           }
+//         `}
+//       </style>
+//     </section>
+//   );
+// }
