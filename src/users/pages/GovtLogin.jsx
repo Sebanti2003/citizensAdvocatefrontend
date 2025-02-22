@@ -1,7 +1,6 @@
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
-import { useNavigate } from 'react-router';
+import {  useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 function GovtLogin() {
   const [departmentalid, setDepartmentId] = useState('');
@@ -17,50 +16,61 @@ function GovtLogin() {
     setError('');
 
     try {
-      console.log('====================================');
-      console.log(import.meta.env.VITE_BACKEND_URL);
-      console.log('====================================');
+      console.log('Backend URL:', import.meta.env.VITE_BACKEND_URL);
       const response = await axios.post(`http://localhost:3000/api/v1/ministry/auth/login`, {
         departmentalid,
         password
+      },{
+        withCredentials: true
       });
+
       console.log(response.data);
-      navigate(`/MinistryofRailways/${response.data.ministry.departmentalid}`);
+      const depid = response.data.ministry.departmentalid;
+
+      const departmentRoutes = {
+        "RAIL001": "MinistryofRailways",
+        "CONSUMER002": "MinistryofConsumerAffairsFoodandPublicDistribution",
+        "WOMEN004": "MinistryofWomenandChildDevelopment",
+        "EDU003": "MinistryofHomeAffairs",
+        "ROAD005": "MinistryofRoadTransportandHighways",
+        "HEALTH006": "MinistryofHealthandFamilyWelfare",
+      };
+
+      if (departmentRoutes[depid]) {
+        navigate(`/${departmentRoutes[depid]}/${depid}`);
+      }
+
       setDepartmentId('');
       setCreateDepartmentPassword('');
     } catch (error) {
       console.error(error);
-      setError(error.response?.data?.message || 'Error loging in');
+      setError(error.response?.data?.message || 'Error logging in');
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    const fetchmessages = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/v1/ministry/me');
-        console.log(response.data);
 
+  // useEffect(() => {
+  //   const fetchMessages = async () => {
+  //     try {
+  //       const response = await axios.get(`http://localhost:3000/api/v1/ministry/me`);
+  //       console.log(response.data);
+  //     } catch (error) {
+  //       console.error('Error fetching messages:', error);
+  //     }
+  //   };
 
-      }
-      catch (error) {
-        console.log('====================================');
-        console.log(error);
-        console.log('====================================');
-      }
-    }
-    fetchmessages();
-  },[]);
-  const handleSignUpClick = () => {
-    setRedirectToSignUp(true);
-  };
+  //   //fetchMessages(); // Call the function
+  // }, []); // Run once when component mounts
 
   if (redirectToSignUp) {
     return <Navigate to="/govt/signup" />;
   }
+
   if (loading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
+
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
@@ -88,15 +98,15 @@ function GovtLogin() {
           </button>
         </form>
         <p className="mt-4 text-center">
-          Doesn&apos;t have an account?{' '}
+          Dont have an account?{' '}
           <span
-            onClick={handleSignUpClick}
+            onClick={() => setRedirectToSignUp(true)}
             className="text-green-500 cursor-pointer"
           >
             Sign up
           </span>
         </p>
-        <div>{error && <p className="text-red-500 mt-4">{error}</p>}</div>
+        {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
     </div>
   );
