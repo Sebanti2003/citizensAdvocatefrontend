@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router';
 import { useNavigate } from 'react-router';
 
@@ -17,7 +17,10 @@ function GovtLogin() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/ministry/auth/login', {
+      console.log('====================================');
+      console.log(import.meta.env.VITE_BACKEND_URL);
+      console.log('====================================');
+      const response = await axios.post(`http://localhost:3000/api/v1/ministry/auth/login`, {
         departmentalid,
         password
       });
@@ -32,7 +35,22 @@ function GovtLogin() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const fetchmessages = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/ministry/me');
+        console.log(response.data);
 
+
+      }
+      catch (error) {
+        console.log('====================================');
+        console.log(error);
+        console.log('====================================');
+      }
+    }
+    fetchmessages();
+  },[]);
   const handleSignUpClick = () => {
     setRedirectToSignUp(true);
   };
