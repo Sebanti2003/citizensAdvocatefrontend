@@ -1,51 +1,42 @@
 import { motion } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
-import { Suspense } from "react";
-import { OrbitControls } from "@react-three/drei";
-import Button from "./ui/Button";
-import ComplaintBox from "./3D/ComplaintBox";
 
 export default function HeroSection() {
   return (
     <section className="w-full h-screen flex flex-col md:flex-row items-center justify-between px-16 py-20 relative overflow-hidden">
-      {/* Simplified White to Saffron Gradient Background */}
-      <div 
+      {/* Background Gradient */}
+      <div
         className="absolute inset-0"
         style={{
-          background: `
-            linear-gradient(
-              to bottom,
-              #FFFFFF 0%,
-              rgba(255, 153, 51, 0.1) 50%,
-              rgba(255, 153, 51, 0.3) 75%,
-              rgba(255, 153, 51, 0.5) 100%
-            )
-          `
+          background: `linear-gradient(
+            to bottom,
+            #FFFFFF 0%,
+            rgba(255, 153, 51, 0.1) 50%,
+            rgba(255, 153, 51, 0.3) 75%,
+            rgba(255, 153, 51, 0.5) 100%
+          )`,
         }}
       />
       {/* Grid Overlay */}
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `
-            linear-gradient(#003366 1px, transparent 1px),
-            linear-gradient(90deg, #003366 1px, transparent 1px)
-          `,
+          backgroundImage: `linear-gradient(#003366 1px, transparent 1px),
+                            linear-gradient(90deg, #003366 1px, transparent 1px)`,
           backgroundSize: "70px 40px",
           opacity: 0.1,
         }}
       />
-      {/* Left Side Content */}
+      {/* Left Content */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="md:w-1/2 text-center md:text-left relative z-10 font-['Oswald']"
+        className="md:w-[60%] text-center md:text-left relative z-10 font-['Oswald']"
       >
-        <h1 className="text-[5vw] font-extrabold text-orange-600 leading-tight drop-shadow-md uppercase">
+        <h1 className="text-[5vw] font-extrabold text-orange-600 uppercase">
           Citizens'
         </h1>
-        <h1 className="text-[7vw] font-extrabold text-blue-900 leading-tight drop-shadow-lg uppercase">
+        <h1 className="text-[7vw] font-extrabold text-blue-900 uppercase">
           Advocate
         </h1>
         <p className="text-[2.5vw] text-green-700 mt-6 font-semibold">
@@ -63,20 +54,21 @@ export default function HeroSection() {
           </button>
         </div>
       </motion.div>
-      {/* Right Side 3D Object */}
-      <motion.div
-        className="w-full md:w-1/2 h-[70vh] flex justify-center items-center mt-10 md:mt-0 relative z-10"
-        whileHover={{ scale: 1.05 }}
-      >
-        <Canvas>
-          <Suspense fallback={null}>
-            <OrbitControls enableZoom={false} />
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[3, 3, 3]} />
-            <ComplaintBox />
-          </Suspense>
-        </Canvas>
-      </motion.div>
+      
+      {/* 3D Model Using Model Viewer */}
+      <div className="w-full md:w-[40%] h-[60vh] flex justify-center items-center mt-10 md:mt-0 relative z-10">
+        <model-viewer 
+          src="/ashoka_chakra.glb" 
+          alt="Ashoka Chakra 3D Model"
+          auto-rotate 
+          auto-rotate-delay="0"
+          rotation-per-second="30deg"
+          disable-zoom
+          disable-pan
+          disable-tap
+          style={{ width: "100%", height: "100%" }}
+        />
+      </div>
     </section>
   );
 }
