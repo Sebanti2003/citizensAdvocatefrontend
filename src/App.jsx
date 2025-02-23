@@ -21,6 +21,7 @@ import HealthFamilyDashboard from './users/pages/HealthFamilyDashboard'
 import ConsumerAffairsDashboard from './users/pages/ConsumerAffairsDashboard'
 import RoadTransportDashboard from './users/pages/RoadTransportDashboard'
 import WomenChildDashboard from './users/pages/WomenChildDashboard'
+import EmployeeRegistrationForm from './government/pages/EmployeeRegistrationForm'
 
 function App() {
 
@@ -38,10 +39,11 @@ function App() {
         <Route path="/user/selectcategory" element={<SelectCategory />} />
         <Route path="/user/railwaydashboard" element={<RailwayDashboard />} />
         {/* Government side routes */}
+        <Route path="/govt/EmployeeRegistration" element={<EmployeeRegistrationForm />} />
         <Route path="/MinistryofHealthandFamilyWelfare/:gov_id" element={<MinistryofHealthandFamilyWelfare />} />
         <Route path="/MinistryofHomeAffairs/:gov_id" element={<MinistryofHomeAffairs />} />
         <Route path="/MinistryofWomenandChildDevelopment/:gov_id" element={<MinistryofWomenandChildDevelopment />} />
-        <Route path="/MinistryofConsumerAffairsFoodandPublicDistribution/:gov_id" element={<MinistryofConsumerAffairsFoodandPublicDistribution />} />
+        <Route path="MinistryofConsumerAffairsFoodandPublicDistribution/:gov_id" element={<MinistryofConsumerAffairsFoodandPublicDistribution />} />
         <Route path="/MinistryofRailways/:gov_id" element={<MinistryofRailways />} />
         <Route path="/MinistryofRoadTransportandHighways/:gov_id" element={<MinistryofRoadTransportandHighways />} />
         {/* user side routes */}

@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 function WomenChildDashboard() {
   const serviceData = {
@@ -43,8 +45,8 @@ function WomenChildDashboard() {
   };
 
   const [complaint, setComplaint] = useState({
-    serviceNumber: "",
-    serviceName: "",
+    issuecode: "",
+    issuetype: "",
     category: "",
     date: "",
     description: "",
@@ -57,9 +59,12 @@ function WomenChildDashboard() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "serviceNumber") {
-      const serviceName = serviceData[value] || "";
-      setComplaint({ ...complaint, serviceNumber: value, serviceName });
+    if (name === "issuecode") {
+      const issuetype = serviceData[value] || "";
+      setComplaint({
+        ...complaint, issuecode: value, issuetype
+
+      });
 
       if (sampleComplaints[value]) {
         setFilteredComplaints(sampleComplaints[value]);
@@ -78,8 +83,18 @@ function WomenChildDashboard() {
     }));
   };
 
-  const handleSubmit = (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
+    const response = await axios.post('http://localhost:3000/api/v1/complaints/ministryofWomenandChildrenDevelopmentpostcomplaint',{
+      issuecode: complaint.issuecode,
+      issuetype: complaint.issuetype,
+      category: complaint.category,
+      date: complaint.date,
+      description: complaint.description,
+      document: complaint.document||"img",
+    },{
+      withCredentials: true
+    });
     setSuccessMessage("✅ Complaint Submitted Successfully!");
     setTimeout(() => setSuccessMessage(""), 3000);
   };
@@ -110,31 +125,35 @@ function WomenChildDashboard() {
         <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-lg font-medium">Support Service Number</label>
+            <label className="block text-lg font-medium">Issue Code</label>
             <input
               type="text"
-              name="serviceNumber"
-              value={complaint.serviceNumber}
+              name="issuecode"
+              value={complaint.issuecode}
               onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
               placeholder="Enter Service Number"
             />
           </div>
           <div>
-            <label className="block text-lg font-medium">Support Service Name</label>
+            <label className="block text-lg font-medium">Issue Type</label>
             <input
               type="text"
-              name="serviceName"
-              value={complaint.serviceName}
+              name="issuetype"
+              value={complaint.issuetype
+
+              }
+              onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-              readOnly
+              
             />
           </div>
         </div>
 
         {filteredComplaints.length > 0 && (
           <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-            <h3 className="text-lg font-bold mb-4">Previous Cases for {complaint.serviceName}</h3>
+            <h3 className="text-lg font-bold mb-4">Previous Cases for {complaint.issuetype
+            }</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredComplaints.map((comp, index) => (
                 <motion.div

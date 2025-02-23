@@ -13,7 +13,8 @@ const MinistryofWomenChildDevelopment = () => {
     const [responseText, setResponseText] = useState("");
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [error, setError] = useState("");
+    const [sending, setSending] = useState(false); // Added missing state
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -23,7 +24,6 @@ const MinistryofWomenChildDevelopment = () => {
                     `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
                     { withCredentials: true }
                 );
-
                 console.log(response.data);
                 setCategories(response.data.categories || []);
                 setComplaints(response.data.complaints || []);
@@ -35,11 +35,11 @@ const MinistryofWomenChildDevelopment = () => {
             }
         };
         fetchComplaints();
-    }, []);
+    }, [gov_id]); // Added `gov_id` as a dependency
 
     const filteredComplaints = useMemo(() => {
         if (selectedCategory === "All") return complaints;
-        return complaints.filter(complaint => complaint.category === selectedCategory);
+        return complaints.filter((complaint) => complaint.category === selectedCategory);
     }, [selectedCategory, complaints]);
 
     const openChat = (complaint) => {
@@ -52,15 +52,37 @@ const MinistryofWomenChildDevelopment = () => {
         setResponseText("");
     };
 
+    const sendResponse = async () => {
+        if (!responseText.trim()) return;
+        setSending(true);
+        try {
+            await axios.post(
+                `http://localhost:3000/api/v1/complaints/respond/${selectedComplaint.id}`,
+                { message: responseText },
+                { withCredentials: true }
+            );
+            setSelectedComplaint((prev) => ({
+                ...prev,
+                messages: [...prev.messages, { sender: "You", text: responseText }],
+            }));
+            setResponseText("");
+        } catch (err) {
+            console.error("Error sending response:", err);
+            setError("Failed to send response.");
+        } finally {
+            setSending(false);
+        }
+    };
+
     const handleLogout = async () => {
         setLoading(true);
-        setError('');
+        setError("");
         try {
-            await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
+            await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`, { withCredentials: true });
             navigate(`/govt/login`);
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.message || 'Error logging out');
+            setError(err.response?.data?.message || "Error logging out");
         } finally {
             setLoading(false);
         }
@@ -91,7 +113,9 @@ const MinistryofWomenChildDevelopment = () => {
                 <p className="text-gray-600 max-md:text-sm text-lg mt-2 font-semibold">
                     Addressing issues related to women’s rights, child welfare, and social development.
                 </p>
-                <p className="text-gray-500">Department ID: <b>{gov_id}</b></p>
+                <p className="text-gray-500">
+                    Department ID: <b>{gov_id}</b>
+                </p>
             </div>
 
             {/* Category Selection */}
@@ -135,44 +159,110 @@ const MinistryofWomenChildDevelopment = () => {
                 </ul>
             </div>
 
-            {/* Chat Modal */}
             {isChatOpen && selectedComplaint && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-                >
-                    <div className="bg-white w-[90%] md:w-[600px] h-[500px] rounded-lg shadow-xl flex flex-col">
-                        <div className="bg-pink-800 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
-                            <h2 className="text-xl font-semibold">Complaint Chat</h2>
-                            <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
-                        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+        >
+          <div className="bg-white bg-opacity-90 w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
 
-                        <div className="flex-1 p-4 overflow-y-auto">
-                            <div className="bg-gray-100 p-4 rounded-lg shadow mb-2">
-                                <strong>Complaint:</strong> {selectedComplaint.description}
-                            </div>
-                            <div className="bg-pink-100 p-4 rounded-lg shadow text-right">
-                                <strong>Response:</strong> {responseText || "No response yet"}
-                            </div>
-                        </div>
+            {/* Chat Header */}
+            <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
+              <h2 className="text-xl font-semibold">Consumer Complaint Chat</h2>
+              <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
+            </div>
 
-                        <div className="p-4 bg-gray-100 rounded-b-lg flex items-center gap-2">
-                            <input
-                                type="text"
-                                className="flex-1 p-2 border border-gray-300 rounded-lg outline-none"
-                                placeholder="Type your response..."
-                                value={responseText}
-                                onChange={(e) => setResponseText(e.target.value)}
-                            />
-                            <button className="bg-pink-600 text-white p-2 rounded-lg hover:bg-pink-700 transition">
-                                <FaPaperPlane className="text-xl" onClick={() => alert("Response Sent!")} />
-                            </button>
-                        </div>
+            {/* Chat Body */}
+            <div className="flex-1 p-6 overflow-y-auto bg-gray-100">
+
+              {/* Product ID */}
+              <div className="mb-3">
+                <label className="block text-lg font-medium">Product ID</label>
+                <input
+                  type="text"
+                  value={selectedComplaint.productid || ""}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+
+              {/* Product Name */}
+              <div className="mb-3">
+                <label className="block text-lg font-medium">Product Name</label>
+                <input
+                  type="text"
+                  value={selectedComplaint.productName || ""}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+
+              {/* Complaint */}
+              <div className="mb-3">
+                <label className="block text-lg font-medium">Complaint</label>
+                <textarea
+                  value={selectedComplaint.description || ""}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  rows="3"
+                  readOnly
+                />
+              </div>
+
+              {/* Supporting Documents */}
+              <div className="mb-3">
+                <label className="block text-lg font-medium">Supporting Documents</label>
+                {selectedComplaint.documents && selectedComplaint.documents.length > 0 ? (
+                  selectedComplaint.documents.map((doc, index) => (
+                    <div key={index} className="text-blue-600 underline cursor-pointer">
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                        Document {index + 1}
+                      </a>
                     </div>
-                </motion.div>
-            )}
+                  ))
+                ) : (
+                  <p className="text-gray-500">No documents attached.</p>
+                )}
+              </div>
+
+              {/* Messages */}
+              <div className="mt-4 p-4 bg-white rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-2">Responses</h3>
+                {selectedComplaint.messages.length > 0 ? (
+                  selectedComplaint.messages.map((msg, index) => (
+                    <div key={index} className={`mb-2 p-2 rounded-lg ${msg.sender === "You" ? "bg-green-200 text-right" : "bg-gray-200 text-left"}`}>
+                      <p className="text-gray-800">{msg.text}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center">No messages yet.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Chat Footer */}
+            <div className="p-4 bg-gray-200 flex items-center gap-2">
+              <input
+                type="text"
+                className="flex-1 p-3 border rounded-lg"
+                placeholder="Type your response..."
+                value={responseText}
+                onChange={(e) => setResponseText(e.target.value)}
+              />
+              <button className="bg-green-600 text-white p-3 rounded-lg" onClick={sendResponse} disabled={sending}>
+                {sending ? "Sending..." : <FaPaperPlane />}
+              </button>
+              <button className="bg-blue-500 text-white p-3 rounded-lg">
+                📞 Call
+              </button>
+              <button className="bg-gray-500 text-white p-3 rounded-lg">
+                📎 Attach
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
         </div>
     );
 };

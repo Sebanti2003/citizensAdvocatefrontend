@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { FaPaperPlane, FaTimes } from "react-icons/fa";
 
 function ConsumerAffairsDashboard() {
   const productData = {
@@ -14,75 +16,102 @@ function ConsumerAffairsDashboard() {
     909: "VWX Smartwatch",
   };
 
-  const categories = [
-    "Defective or Fake Products",
-    "Online Shopping Scams",
-    "Delayed or Non-Delivery of Orders",
-    "Misleading Advertisements",
-    "Poor Customer Service & Refund Issues",
-    "Price Hike & Overcharging",
-    "Food Adulteration & Expired Products",
-    "Warranty & Guarantee Violations",
-    "Fraudulent Business Practices",
-    "Electricity & Water Bill Complaints",
-    "Telecom & Internet Service Issues"
-  ];
-
-  const sampleComplaints = {
-    101: [
-      { description: "TV screen flickers frequently.", status: "Pending" },
-      { description: "Remote control not working.", status: "Resolved" },
-    ],
-    202: [
-      { description: "Refrigerator not cooling properly.", status: "Pending" },
-      { description: "Strange noise coming from the compressor.", status: "Resolved" },
-    ],
-    303: [
-      { description: "Mobile battery drains too fast.", status: "Pending" },
-      { description: "Camera quality is poor despite high specifications.", status: "Resolved" },
-    ],
-  };
+  // const categories = [
+  //   "Defective or Fake Products",
+  //   "Online Shopping Scams",
+  //   "Delayed or Non-Delivery of Orders",
+  //   "Misleading Advertisements",
+  //   "Poor Customer Service & Refund Issues",
+  //   "Price Hike & Overcharging",
+  //   "Food Adulteration & Expired Products",
+  //   "Warranty & Guarantee Violations",
+  //   "Fraudulent Business Practices",
+  //   "Electricity & Water Bill Complaints",
+  //   "Telecom & Internet Service Issues",
+  // ];
 
   const [complaint, setComplaint] = useState({
     productId: "",
     productName: "",
     category: "",
-    purchaseDate: "",
+    date: "",
     description: "",
     document: null,
   });
 
-  const [filteredComplaints, setFilteredComplaints] = useState([]);
+  // const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [responseText, setResponseText] = useState("");
+  const [sending, setSending] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     if (name === "productId") {
       const productName = productData[value] || "";
       setComplaint({ ...complaint, productId: value, productName });
-
-      if (sampleComplaints[value]) {
-        setFilteredComplaints(sampleComplaints[value]);
-      } else {
-        setFilteredComplaints([]);
-      }
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
   };
 
-  const handleRepostComplaint = (desc) => {
-    setComplaint((prev) => ({
-      ...prev,
-      description: desc,
-    }));
+  const handleFileChange = (e) => {
+    setComplaint({ ...complaint, document: e.target.files[0] });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage("✅ Complaint Submitted Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+
+    const formData = new FormData();
+    formData.append("productid", complaint.productId);
+    formData.append("productname", complaint.productName);
+    formData.append("category", complaint.category);
+    formData.append("date", complaint.date);
+    formData.append("description", complaint.description);
+    if (complaint.document) {
+      formData.append("document", complaint.document);
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/complaints/ministryofConsumerAffairspostcomplaint",
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage("✅ Complaint Submitted Successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      }
+    } catch (error) {
+      console.error("Error submitting complaint:", error);
+      alert("❌ Failed to submit complaint. Please try again.");
+    }
+  };
+
+  const closeChat = () => {
+    setIsChatOpen(false);
+    setSelectedComplaint(null);
+  };
+
+  const sendResponse = async () => {
+    if (!responseText.trim()) return;
+    setSending(true);
+
+    try {
+      // Simulating sending response (Replace with actual API call if needed)
+      setTimeout(() => {
+        setSending(false);
+        setResponseText("");
+      }, 1000);
+    } catch (error) {
+      console.error("Error sending response:", error);
+      setSending(false);
+    }
   };
 
   return (
@@ -133,77 +162,9 @@ function ConsumerAffairsDashboard() {
           </div>
         </div>
 
-        {filteredComplaints.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-            <h3 className="text-lg font-bold mb-4">Existing Complaints for {complaint.productName}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredComplaints.map((comp, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <p className="font-semibold">{comp.description}</p>
-                  <p className={`text-sm ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
-                    Status: {comp.status}
-                  </p>
-                  <button
-                    onClick={() => handleRepostComplaint(comp.description)}
-                    className="mt-2 py-1 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Repost the Same Complaint
-                  </button>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Category Selection - New Addition */}
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Select Category</label>
-          <select
-            name="category"
-            value={complaint.category}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">Select a category</option>
-            {categories.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        {/* Choose Date */}
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Choose Date</label>
-          <input
-            type="date"
-            name="date"
-            value={complaint.date}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <div className="mt-6">
-          <label className="block text-lg font-medium">Complaint Description</label>
-          <textarea
-            name="description"
-            value={complaint.description}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            placeholder="Describe your complaint"
-            rows="3"
-          />
-        </div>
-
         <div className="mt-4">
           <label className="block text-lg font-medium">Upload Supporting Document</label>
-          <input type="file" className="w-full p-2 border border-gray-300 rounded-lg" />
+          <input type="file" onChange={handleFileChange} className="w-full p-2 border border-gray-300 rounded-lg" />
         </div>
 
         <button
@@ -214,6 +175,35 @@ function ConsumerAffairsDashboard() {
           Submit Complaint
         </button>
       </motion.div>
+
+      {isChatOpen && selectedComplaint && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+        >
+          <div className="bg-white bg-opacity-90 w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
+            <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
+              <h2 className="text-xl font-semibold">Consumer Complaint Chat</h2>
+              <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
+            </div>
+
+            <div className="p-4 bg-gray-200 flex items-center gap-2">
+              <input
+                type="text"
+                className="flex-1 p-3 border rounded-lg"
+                placeholder="Type your response..."
+                value={responseText}
+                onChange={(e) => setResponseText(e.target.value)}
+              />
+              <button className="bg-green-600 text-white p-3 rounded-lg" onClick={sendResponse} disabled={sending}>
+                {sending ? "Sending..." : <FaPaperPlane />}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

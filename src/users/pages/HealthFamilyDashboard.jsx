@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 function HealthFamilyDashboard() {
   const hospitalData = {
@@ -25,7 +27,7 @@ function HealthFamilyDashboard() {
     "Malpractice & Misconduct by Doctors",
     "Sanitation & Hygiene in Public Hospitals",
     "Medical Test & Lab Report Delays",
-    "Lack of Facilities for Disabled Patients"
+    "Lack of Facilities for Disabled Patients",
   ];
 
   const sampleComplaints = {
@@ -54,7 +56,6 @@ function HealthFamilyDashboard() {
 
   const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [selectedFileName, setSelectedFileName] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,21 +64,9 @@ function HealthFamilyDashboard() {
       const hospitalName = hospitalData[value] || "";
       setComplaint({ ...complaint, hospitalId: value, hospitalName });
 
-      if (sampleComplaints[value]) {
-        setFilteredComplaints(sampleComplaints[value]);
-      } else {
-        setFilteredComplaints([]);
-      }
+      setFilteredComplaints(sampleComplaints[value] || []);
     } else {
       setComplaint({ ...complaint, [name]: value });
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setComplaint({ ...complaint, document: file });
-      setSelectedFileName(file.name);
     }
   };
 
@@ -88,10 +77,34 @@ function HealthFamilyDashboard() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSuccessMessage("✅ Complaint Submitted Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+  const handleSubmit = async (e) => {
+    try{
+      e.preventDefault();
+
+    const response = await axios.post(
+        "http://localhost:3000/api/v1/complaints/ministryofHealthFamilyWelfarepostcomplaint",
+        {
+          hospitalid: complaint.hospitalId,
+          hospitalname: complaint.hospitalName,
+          category: complaint.category,
+          date: complaint.date,
+          description: complaint.description,
+          document: complaint.document || "img",
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setSuccessMessage("✅ Complaint Submitted Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+    
+     catch (error) {
+      console.error("Error submitting complaint:", error);
+      setSuccessMessage("❌ Failed to submit complaint. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
   };
 
   return (
@@ -206,12 +219,6 @@ function HealthFamilyDashboard() {
             placeholder="Describe your complaint"
             rows="3"
           />
-        </div>
-
-        {/* Upload Document */}
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Upload Supporting Document</label>
-          <input type="file" className="w-full p-2 border border-gray-300 rounded-lg" />
         </div>
 
         <button

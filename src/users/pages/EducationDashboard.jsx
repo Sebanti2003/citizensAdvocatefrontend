@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
-function HealthFamilyDashboard() {
+function EducationDashboard() {
   const hospitalData = {
     111: "AIIMS Delhi",
     222: "Apollo Hospitals Chennai",
@@ -25,7 +27,7 @@ function HealthFamilyDashboard() {
     "Malpractice & Misconduct by Doctors",
     "Sanitation & Hygiene in Public Hospitals",
     "Medical Test & Lab Report Delays",
-    "Lack of Facilities for Disabled Patients"
+    "Lack of Facilities for Disabled Patients",
   ];
 
   const sampleComplaints = {
@@ -44,8 +46,8 @@ function HealthFamilyDashboard() {
   };
 
   const [complaint, setComplaint] = useState({
-    hospitalId: "",
-    hospitalName: "",
+    institutionid: "",
+    institutionname: "",
     category: "",
     date: "",
     description: "",
@@ -58,15 +60,11 @@ function HealthFamilyDashboard() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "hospitalId") {
-      const hospitalName = hospitalData[value] || "";
-      setComplaint({ ...complaint, hospitalId: value, hospitalName });
+    if (name === "institutionid") {
+      const institutionname = hospitalData[value] || "";
+      setComplaint({ ...complaint, institutionid: value, institutionname });
 
-      if (sampleComplaints[value]) {
-        setFilteredComplaints(sampleComplaints[value]);
-      } else {
-        setFilteredComplaints([]);
-      }
+      setFilteredComplaints(sampleComplaints[value] || []);
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
@@ -79,16 +77,40 @@ function HealthFamilyDashboard() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSuccessMessage("✅ Complaint Submitted Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+  const handleSubmit = async (e) => {
+    try{
+      e.preventDefault();
+
+    const response = await axios.post(
+        "http://localhost:3000/api/v1/complaints/ministryofeducationpostcomplaint",
+        {
+          institutionid: complaint.institutionid,
+          institutionname: complaint.institutionname,
+          category: complaint.category,
+          date: complaint.date,
+          description: complaint.description,
+          document: complaint.document || "img",
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setSuccessMessage("✅ Complaint Submitted Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+    
+     catch (error) {
+      console.error("Error submitting complaint:", error);
+      setSuccessMessage("❌ Failed to submit complaint. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gray-100">
       <motion.h1 className="text-4xl font-extrabold text-blue-800 text-center mt-6">
-        Ministry of Health and Family Dashboard
+        Ministry of Education
       </motion.h1>
 
       <motion.div
@@ -111,22 +133,22 @@ function HealthFamilyDashboard() {
         <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-lg font-medium">Hospital ID</label>
+            <label className="block text-lg font-medium">Education ID</label>
             <input
               type="text"
-              name="hospitalId"
-              value={complaint.hospitalId}
+              name="institutionid"
+              value={complaint.institutionid}
               onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
               placeholder="Enter Hospital ID"
             />
           </div>
           <div>
-            <label className="block text-lg font-medium">Hospital Name</label>
+            <label className="block text-lg font-medium">Institution Name</label>
             <input
               type="text"
-              name="hospitalName"
-              value={complaint.hospitalName}
+              name="institutionname"
+              value={complaint.hospitalname}
               className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
               readOnly
             />
@@ -135,7 +157,7 @@ function HealthFamilyDashboard() {
 
         {filteredComplaints.length > 0 && (
           <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-            <h3 className="text-lg font-bold mb-4">Existing Complaints for {complaint.hospitalName}</h3>
+            <h3 className="text-lg font-bold mb-4">Existing Complaints for {complaint.institutionname}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredComplaints.map((comp, index) => (
                 <motion.div
@@ -199,15 +221,6 @@ function HealthFamilyDashboard() {
           />
         </div>
 
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Upload Supporting Document</label>
-          <input 
-            type="file" 
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            onChange={(e) => setComplaint({ ...complaint, document: e.target.files[0] })}
-          />
-        </div>
-
         <button
           type="submit"
           onClick={handleSubmit}
@@ -220,4 +233,4 @@ function HealthFamilyDashboard() {
   );
 }
 
-export default HealthFamilyDashboard;
+export default EducationDashboard;
