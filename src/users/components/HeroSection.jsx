@@ -1,6 +1,13 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function HeroSection() {
+  const navigate = useNavigate();
+
+  const handleFileComplaint = () => {
+    navigate('/user/login');
+  };
+
   return (
     <section className="w-full h-screen flex flex-col md:flex-row items-center justify-between px-16 py-20 relative overflow-hidden">
       {/* Background Gradient */}
@@ -46,7 +53,9 @@ export default function HeroSection() {
           A centralized platform for filing complaints across multiple ministries with ease.
         </p>
         <div className="mt-16 flex gap-12">
-          <button className="glow-button">
+          <button
+            onClick={handleFileComplaint}
+            className="glow-button">
             📢 File a Complaint
           </button>
           <button className="glow-button outline">
@@ -93,13 +102,14 @@ export default function HeroSection() {
             font-family: 'Oswald', sans-serif;
             text-transform: uppercase;
             color: white;
-            background-color: #007BFF; /* Blue color */
+            background-color: #007BFF;
             border: none;
             border-radius: 12px;
             box-shadow: 0px 0px 20px rgba(0, 123, 255, 0.6);
             position: relative;
             transition: all 0.3s ease-in-out;
             overflow: hidden;
+            cursor: pointer;
           }
 
           .glow-button::after {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaBell } from "react-icons/fa"; // Bell icon for notifications
 
@@ -28,6 +28,8 @@ const CitizenDashboard = () => {
         });
         setNotifications(initialNotifications);
       } catch (err) {
+        console.log("Error fetching complaints:", err);
+
         setError("Failed to load complaints.");
       } finally {
         setLoading(false);
@@ -59,11 +61,10 @@ const CitizenDashboard = () => {
           {["all", "pending", "resolved"].map((status) => (
             <button
               key={status}
-              className={`px-4 py-2 rounded ${
-                filter === status
+              className={`px-4 py-2 rounded ${filter === status
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-gray-600"
-              }`}
+                }`}
               onClick={() => setFilter(status)}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -99,11 +100,10 @@ const CitizenDashboard = () => {
                     <td className="p-3">{complaint.pnr}</td>
                     <td className="p-3">{complaint.date}</td>
                     <td
-                      className={`p-3 font-semibold ${
-                        complaint.status === "Pending"
+                      className={`p-3 font-semibold ${complaint.status === "Pending"
                           ? "text-orange-500"
                           : "text-green-500"
-                      }`}
+                        }`}
                     >
                       {complaint.status}
                     </td>
