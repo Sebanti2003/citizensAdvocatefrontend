@@ -12,41 +12,50 @@ import DarkModeToggle from "../components/DarkModeToggle";
 
 const LandingPage = () => {
   return (
-    
     <div className="relative">
-    
-
       {/* Navbar */}
       <Navbar />
       
       {/* Hero Section */}
-      <HeroSection />
+      <section id="hero">
+        <HeroSection />
+      </section>
       
       {/* How It Works */}
-      <HowItWorks />
+      <section id="how-it-works">
+        <HowItWorks />
+      </section>
       
       {/* Key Features */}
-      <Features />
+      <section id="features">
+        <Features />
+      </section>
       
       {/* Ministries & Categories */}
-      <Ministries />
+      <section id="ministries">
+        <Ministries />
+      </section>
       
       {/* Government Benefits */}
-      <GovernmentBenefits />
+      <section id="gov-benefits">
+        <GovernmentBenefits />
+      </section>
       
       {/* FAQ Section */}
-      <FAQ />
+      <section id="faq">
+        <FAQ />
+      </section>
       
       {/* Contact Section */}
-      <Contact />
+      <section id="contact">
+        <Contact />
+      </section>
       
       {/* Scroll to Top Button */}
       <ScrollToTop />
       
-      {/* Dark Mode Toggle (Global) */}
-      <div className="fixed bottom-5 right-5">
-        <DarkModeToggle />
-      </div>
+      {/* Dark Mode Toggle (Global) - Commented out for now */}
+      {/* <DarkModeToggle /> */}
     </div>
   );
 };

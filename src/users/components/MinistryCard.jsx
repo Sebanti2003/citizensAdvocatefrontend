@@ -1,25 +1,14 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import Link from "next/link";
 
 const MinistryCard = ({ title, description, link }) => {
-  const navigate = useNavigate();
-
   return (
-    <motion.div
-      className="relative w-full bg-white shadow-lg rounded-lg p-6 text-center cursor-pointer"
-      whileHover={{ rotateY: 180 }}
-      transition={{ duration: 0.6 }}
-      onClick={() => navigate(link)}
-    >
-      <div className="absolute inset-0 flex flex-col items-center justify-center backface-hidden">
-        <h3 className="text-xl font-semibold">{title}</h3>
-        <p className="text-gray-600 mt-2">{description}</p>
+    <Link href={link}>
+      <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 h-full">
+        <h3 className="text-3xl font-semibold mb-4">{title}</h3>
+        <p className="text-xl text-gray-600">{description}</p>
       </div>
-      <div className="absolute inset-0 flex items-center justify-center bg-blue-600 text-white rounded-lg rotateY-180">
-        <p className="text-lg">Click to Explore</p>
-      </div>
-    </motion.div>
+    </Link>
   );
 };
 
