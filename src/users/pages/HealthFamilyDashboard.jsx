@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -26,7 +27,7 @@ function HealthFamilyDashboard() {
     "Malpractice & Misconduct by Doctors",
     "Sanitation & Hygiene in Public Hospitals",
     "Medical Test & Lab Report Delays",
-    "Lack of Facilities for Disabled Patients"
+    "Lack of Facilities for Disabled Patients",
   ];
 
   const sampleComplaints = {
@@ -55,24 +56,19 @@ function HealthFamilyDashboard() {
 
   const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [selectedFileName, setSelectedFileName] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "hospitalId") {
       const hospitalName = hospitalData[value] || "";
       setComplaint({ ...complaint, hospitalId: value, hospitalName });
+<<<<<<< HEAD
+
+=======
+>>>>>>> ab892ce985315050fa1603e86d7521339311db85
       setFilteredComplaints(sampleComplaints[value] || []);
     } else {
       setComplaint({ ...complaint, [name]: value });
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setComplaint({ ...complaint, document: file });
-      setSelectedFileName(file.name);
     }
   };
 
@@ -80,10 +76,34 @@ function HealthFamilyDashboard() {
     setComplaint((prev) => ({ ...prev, description: desc }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSuccessMessage("✅ Complaint Submitted Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+  const handleSubmit = async (e) => {
+    try{
+      e.preventDefault();
+
+    const response = await axios.post(
+        "http://localhost:3000/api/v1/complaints/ministryofHealthFamilyWelfarepostcomplaint",
+        {
+          hospitalid: complaint.hospitalId,
+          hospitalname: complaint.hospitalName,
+          category: complaint.category,
+          date: complaint.date,
+          description: complaint.description,
+          document: complaint.document || "img",
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setSuccessMessage("✅ Complaint Submitted Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+    
+     catch (error) {
+      console.error("Error submitting complaint:", error);
+      setSuccessMessage("❌ Failed to submit complaint. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
   };
 
   return (
@@ -231,10 +251,53 @@ function HealthFamilyDashboard() {
             onClick={handleSubmit}
             className="w-full py-2 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
           >
+<<<<<<< HEAD
+            <option value="">Select a category</option>
+            {categories.map((category, index) => (
+              <option key={index} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mt-4">
+          <label className="block text-lg font-medium">Choose Date</label>
+          <input
+            type="date"
+            name="date"
+            value={complaint.date}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
+        </div>
+
+        <div className="mt-6">
+          <label className="block text-lg font-medium">Complaint Description</label>
+          <textarea
+            name="description"
+            value={complaint.description}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            placeholder="Describe your complaint"
+            rows="3"
+          />
+        </div>
+
+        <button
+          type="submit"
+          onClick={handleSubmit}
+          className="w-full py-2 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+        >
+          Submit Complaint
+        </button>
+      </motion.div>
+=======
             Submit Complaint
           </button>
         </motion.div>
       </div>
+>>>>>>> ab892ce985315050fa1603e86d7521339311db85
     </div>
   );
 }

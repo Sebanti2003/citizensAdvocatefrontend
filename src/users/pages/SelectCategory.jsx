@@ -11,6 +11,7 @@ import axios from "axios";
 
 function SelectCategory() {
   const navigate = useNavigate();
+  // eslint-disable-next-line no-unused-vars
   const [name, setName] = React.useState('');
 
   const handlelogout = async () => {

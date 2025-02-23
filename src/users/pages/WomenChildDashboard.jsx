@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -44,8 +45,8 @@ function WomenChildDashboard() {
   };
 
   const [complaint, setComplaint] = useState({
-    serviceNumber: "",
-    serviceName: "",
+    issuecode: "",
+    issuetype: "",
     category: "",
     date: "",
     description: "",
@@ -57,10 +58,26 @@ function WomenChildDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+<<<<<<< HEAD
+
+    if (name === "issuecode") {
+      const issuetype = serviceData[value] || "";
+      setComplaint({
+        ...complaint, issuecode: value, issuetype
+
+      });
+
+      if (sampleComplaints[value]) {
+        setFilteredComplaints(sampleComplaints[value]);
+      } else {
+        setFilteredComplaints([]);
+      }
+=======
     if (name === "serviceNumber") {
       const serviceName = serviceData[value] || "";
       setComplaint({ ...complaint, serviceNumber: value, serviceName });
       setFilteredComplaints(sampleComplaints[value] || []);
+>>>>>>> ab892ce985315050fa1603e86d7521339311db85
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
@@ -73,8 +90,18 @@ function WomenChildDashboard() {
     }));
   };
 
-  const handleSubmit = (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
+    const response = await axios.post('http://localhost:3000/api/v1/complaints/ministryofWomenandChildrenDevelopmentpostcomplaint',{
+      issuecode: complaint.issuecode,
+      issuetype: complaint.issuetype,
+      category: complaint.category,
+      date: complaint.date,
+      description: complaint.description,
+      document: complaint.document||"img",
+    },{
+      withCredentials: true
+    });
     setSuccessMessage("✅ Complaint Submitted Successfully!");
     setTimeout(() => setSuccessMessage(""), 3000);
   };
@@ -96,6 +123,59 @@ function WomenChildDashboard() {
           Women and Child Development Dashboard
         </motion.h1>
 
+<<<<<<< HEAD
+        <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-lg font-medium">Issue Code</label>
+            <input
+              type="text"
+              name="issuecode"
+              value={complaint.issuecode}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+              placeholder="Enter Service Number"
+            />
+          </div>
+          <div>
+            <label className="block text-lg font-medium">Issue Type</label>
+            <input
+              type="text"
+              name="issuetype"
+              value={complaint.issuetype
+
+              }
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+              
+            />
+          </div>
+        </div>
+
+        {filteredComplaints.length > 0 && (
+          <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
+            <h3 className="text-lg font-bold mb-4">Previous Cases for {complaint.issuetype
+            }</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredComplaints.map((comp, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <p className="font-semibold">{comp.description}</p>
+                  <p className={`text-sm ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
+                    Status: {comp.status}
+                  </p>
+                  <button
+                    onClick={() => handleRepostComplaint(comp.description)}
+                    className="mt-2 py-1 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                  >
+                    Repost the Same Complaint
+                  </button>
+                </motion.div>
+              ))}
+=======
         <motion.div
           className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-8 flex flex-col gap-6 mt-6"
           initial={{ opacity: 0, y: 20 }}
@@ -136,6 +216,7 @@ function WomenChildDashboard() {
                 className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
                 placeholder="Enter Service Name"
               />
+>>>>>>> ab892ce985315050fa1603e86d7521339311db85
             </div>
           </div>
 
