@@ -1,148 +1,139 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-<<<<<<< HEAD
-import { FaPaperPlane, FaTimes } from "react-icons/fa";
-=======
->>>>>>> ab892ce985315050fa1603e86d7521339311db85
 
 function ConsumerAffairsDashboard() {
   const productData = {
-    101: "XYZ Electronics TV",
-    202: "ABC Home Refrigerator",
-    303: "DEF Mobile Phone",
-    404: "GHI Washing Machine",
-    505: "JKL Microwave Oven",
-    606: "MNO Air Conditioner",
-    707: "PQR Water Purifier",
-    808: "STU Laptop",
-    909: "VWX Smartwatch",
+    1001: "Amazon India",
+    1002: "Flipkart",
+    1003: "Myntra",
+    1004: "Reliance Digital",
+    1005: "BigBasket",
+    1006: "Swiggy",
+    1007: "Zomato",
+    1008: "Airtel",
+    1009: "Jio",
+    1010: "Tata CLiQ",
   };
 
-  // const categories = [
-  //   "Defective or Fake Products",
-  //   "Online Shopping Scams",
-  //   "Delayed or Non-Delivery of Orders",
-  //   "Misleading Advertisements",
-  //   "Poor Customer Service & Refund Issues",
-  //   "Price Hike & Overcharging",
-  //   "Food Adulteration & Expired Products",
-  //   "Warranty & Guarantee Violations",
-  //   "Fraudulent Business Practices",
-  //   "Electricity & Water Bill Complaints",
-  //   "Telecom & Internet Service Issues",
-  // ];
+  const categories = [
+    "Defective or Fake Products",
+    "Online Shopping Scams",
+    "Delayed or Non-Delivery of Orders",
+    "Misleading Advertisements",
+    "Poor Customer Service & Refund Issues",
+    "Price Hike & Overcharging",
+    "Food Adulteration & Expired Products",
+    "Warranty & Guarantee Violations",
+    "Fraudulent Business Practices",
+    "Electricity & Water Bill Complaints",
+    "Telecom & Internet Service Issues",
+  ];
+
+  const sampleComplaints = {
+    1001: [
+      { description: "Received counterfeit product.", status: "Pending" },
+      { description: "Refund not processed after return.", status: "Resolved" },
+    ],
+    1002: [
+      { description: "Order delayed by 2 weeks.", status: "Pending" },
+      { description: "Wrong item delivered.", status: "Resolved" },
+    ],
+    1003: [
+      { description: "Size chart misleading.", status: "Pending" },
+      { description: "Quality different from advertised.", status: "Resolved" },
+    ],
+  };
 
   const [complaint, setComplaint] = useState({
-    productId: "",
-    productName: "",
+    productid: "",
+    productname: "",
     category: "",
     date: "",
     description: "",
     document: null,
   });
 
-  // const [filteredComplaints, setFilteredComplaints] = useState([]);
+  const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [selectedComplaint, setSelectedComplaint] = useState(null);
-  const [responseText, setResponseText] = useState("");
-  const [sending, setSending] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "productId") {
-      // Auto-populate productName if available in productData
-      const productName = productData[value] || "";
-      setComplaint({ ...complaint, productId: value, productName });
-<<<<<<< HEAD
-=======
+
+    if (name === "productid") {
+      const productname = productData[value] || "";
+      setComplaint({ ...complaint, productid: value, productname });
       setFilteredComplaints(sampleComplaints[value] || []);
->>>>>>> ab892ce985315050fa1603e86d7521339311db85
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
   };
 
-  const handleFileChange = (e) => {
-    setComplaint({ ...complaint, document: e.target.files[0] });
+  const handleRepostComplaint = (desc) => {
+    setComplaint((prev) => ({
+      ...prev,
+      description: desc,
+    }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("productid", complaint.productId);
-    formData.append("productname", complaint.productName);
-    formData.append("category", complaint.category);
-    formData.append("date", complaint.date);
-    formData.append("description", complaint.description);
-    if (complaint.document) {
-      formData.append("document", complaint.document);
-    }
-
     try {
+      e.preventDefault();
+
       const response = await axios.post(
-        "http://localhost:3000/api/v1/complaints/ministryofConsumerAffairspostcomplaint",
-        formData,
+        "http://localhost:3000/api/v1/complaints/ministryofconsumeraffairspostcomplaint",
+        {
+          productid: complaint.productid,
+          productname: complaint.productname,
+          category: complaint.category,
+          date: complaint.date,
+          description: complaint.description,
+          document: complaint.document || "img",
+        },
         {
           withCredentials: true,
-          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
-      if (response.data.success) {
-        setSuccessMessage("✅ Complaint Submitted Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-      }
+      setSuccessMessage("✅ Complaint Submitted Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error submitting complaint:", error);
-      alert("❌ Failed to submit complaint. Please try again.");
-    }
-  };
-
-  const closeChat = () => {
-    setIsChatOpen(false);
-    setSelectedComplaint(null);
-  };
-
-  const sendResponse = async () => {
-    if (!responseText.trim()) return;
-    setSending(true);
-
-    try {
-      // Simulating sending response (Replace with actual API call if needed)
-      setTimeout(() => {
-        setSending(false);
-        setResponseText("");
-      }, 1000);
-    } catch (error) {
-      console.error("Error sending response:", error);
-      setSending(false);
+      setSuccessMessage("❌ Failed to submit complaint. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background with Indian flag colors - fixed to viewport */}
+    <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
+      {/* Background design */}
       <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
-      <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
+      <div className="fixed inset-0 bg-white opacity-10"></div>
 
-      {/* Main content container with proper padding and scrolling */}
-      <div className="w-full max-w-7xl px-4 py-6 flex flex-col items-center relative z-10">
-        <motion.h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">
-          Ministry of Consumer Affairs Dashboard
+      {/* Main content container */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-6">
+        <motion.h1
+          className="text-4xl font-extrabold text-blue-800 text-center mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Ministry of Consumer Affairs
         </motion.h1>
 
         <motion.div
-          className="w-full bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg flex flex-col gap-4"
+          className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-8 flex flex-col gap-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           {successMessage && (
             <motion.div
-              className="w-full text-center text-lg font-semibold text-green-700 bg-green-100 py-2 rounded-lg"
+              className={`w-full text-center text-lg font-semibold py-2 rounded-lg ${
+                successMessage.includes("❌")
+                  ? "text-red-700 bg-red-100"
+                  : "text-green-700 bg-green-100"
+              }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
@@ -151,97 +142,56 @@ function ConsumerAffairsDashboard() {
             </motion.div>
           )}
 
-<<<<<<< HEAD
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Upload Supporting Document</label>
-          <input type="file" onChange={handleFileChange} className="w-full p-2 border border-gray-300 rounded-lg" />
-        </div>
+          <h2 className="text-2xl font-bold text-gray-800">File a New Complaint</h2>
 
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          className="w-full py-2 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
-        >
-          Submit Complaint
-        </button>
-      </motion.div>
-
-      {isChatOpen && selectedComplaint && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-        >
-          <div className="bg-white bg-opacity-90 w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
-            <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
-              <h2 className="text-xl font-semibold">Consumer Complaint Chat</h2>
-              <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
-            </div>
-
-            <div className="p-4 bg-gray-200 flex items-center gap-2">
-              <input
-                type="text"
-                className="flex-1 p-3 border rounded-lg"
-                placeholder="Type your response..."
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-              />
-              <button className="bg-green-600 text-white p-3 rounded-lg" onClick={sendResponse} disabled={sending}>
-                {sending ? "Sending..." : <FaPaperPlane />}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-=======
-          <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
-          
-          {/* Form grid with better spacing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1">Product ID</label>
+              <label className="block text-lg font-medium">Product/Service ID</label>
               <input
                 type="text"
-                name="productId"
-                value={complaint.productId}
+                name="productid"
+                value={complaint.productid}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg bg-white"
-                placeholder="Enter Product ID"
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                placeholder="Enter Product/Service ID"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Product Name</label>
+              <label className="block text-lg font-medium">Product/Service Name</label>
               <input
                 type="text"
-                name="productName"
-                value={complaint.productName}
+                name="productname"
+                value={complaint.productname}
                 onChange={handleInputChange}
                 className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                placeholder="Enter Product Name"
+                placeholder="Enter Product/Service Name"
               />
             </div>
           </div>
 
           {filteredComplaints.length > 0 && (
-            <div className="bg-white/80 p-4 rounded-lg shadow-md w-full">
-              <h3 className="text-lg font-bold mb-2">
-                Existing Complaints for {complaint.productName}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
+              <h3 className="text-lg font-bold mb-4">
+                Existing Complaints for {complaint.productname}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredComplaints.map((comp, index) => (
                   <motion.div
                     key={index}
-                    className="bg-white p-3 rounded-lg shadow-md flex flex-col gap-2"
+                    className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
                     whileHover={{ scale: 1.02 }}
                   >
                     <p className="font-semibold">{comp.description}</p>
-                    <p className={`text-sm ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
+                    <p
+                      className={`text-sm ${
+                        comp.status === "Resolved" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
                       Status: {comp.status}
                     </p>
                     <button
                       onClick={() => handleRepostComplaint(comp.description)}
-                      className="py-1 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      className="mt-2 py-1 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                       Repost the Same Complaint
                     </button>
@@ -251,13 +201,13 @@ function ConsumerAffairsDashboard() {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Select Category</label>
+          <div className="mt-4">
+            <label className="block text-lg font-medium">Select Category</label>
             <select
               name="category"
               value={complaint.category}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white"
+              className="w-full p-2 border border-gray-300 rounded-lg"
             >
               <option value="">Select a category</option>
               {categories.map((category, index) => (
@@ -267,48 +217,39 @@ function ConsumerAffairsDashboard() {
               ))}
             </select>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Choose Date</label>
+
+          <div className="mt-4">
+            <label className="block text-lg font-medium">Choose Date</label>
             <input
               type="date"
-              name="purchaseDate"
-              value={complaint.purchaseDate}
+              name="date"
+              value={complaint.date}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white"
+              className="w-full p-2 border border-gray-300 rounded-lg"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Complaint Description</label>
+          <div className="mt-6">
+            <label className="block text-lg font-medium">Complaint Description</label>
             <textarea
               name="description"
               value={complaint.description}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white"
+              className="w-full p-2 border border-gray-300 rounded-lg"
               placeholder="Describe your complaint"
               rows="3"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Upload Supporting Document</label>
-            <input
-              type="file"
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white"
             />
           </div>
 
           <button
             type="submit"
             onClick={handleSubmit}
-            className="w-full py-2 mt-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+            className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition mt-4"
           >
             Submit Complaint
           </button>
         </motion.div>
       </div>
->>>>>>> ab892ce985315050fa1603e86d7521339311db85
     </div>
   );
 }

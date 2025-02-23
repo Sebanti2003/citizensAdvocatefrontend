@@ -58,26 +58,16 @@ function WomenChildDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-<<<<<<< HEAD
 
     if (name === "issuecode") {
       const issuetype = serviceData[value] || "";
       setComplaint({
-        ...complaint, issuecode: value, issuetype
-
+        ...complaint,
+        issuecode: value,
+        issuetype,
       });
 
-      if (sampleComplaints[value]) {
-        setFilteredComplaints(sampleComplaints[value]);
-      } else {
-        setFilteredComplaints([]);
-      }
-=======
-    if (name === "serviceNumber") {
-      const serviceName = serviceData[value] || "";
-      setComplaint({ ...complaint, serviceNumber: value, serviceName });
       setFilteredComplaints(sampleComplaints[value] || []);
->>>>>>> ab892ce985315050fa1603e86d7521339311db85
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
@@ -90,25 +80,33 @@ function WomenChildDashboard() {
     }));
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await axios.post('http://localhost:3000/api/v1/complaints/ministryofWomenandChildrenDevelopmentpostcomplaint',{
-      issuecode: complaint.issuecode,
-      issuetype: complaint.issuetype,
-      category: complaint.category,
-      date: complaint.date,
-      description: complaint.description,
-      document: complaint.document||"img",
-    },{
-      withCredentials: true
-    });
-    setSuccessMessage("✅ Complaint Submitted Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+    try {
+      await axios.post(
+        "http://localhost:3000/api/v1/complaints/ministryofWomenandChildrenDevelopmentpostcomplaint",
+        {
+          issuecode: complaint.issuecode,
+          issuetype: complaint.issuetype,
+          category: complaint.category,
+          date: complaint.date,
+          description: complaint.description,
+          document: complaint.document || "img",
+        },
+        { withCredentials: true }
+      );
+
+      setSuccessMessage("✅ Complaint Submitted Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Error submitting complaint:", error);
+      setSuccessMessage("❌ Error submitting complaint. Please try again.");
+    }
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background design matching Consumer Affairs Dashboard */}
+      {/* Background design */}
       <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
       <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
@@ -123,9 +121,8 @@ function WomenChildDashboard() {
           Women and Child Development Dashboard
         </motion.h1>
 
-<<<<<<< HEAD
-        <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <h2 className="text-xl font-bold text-gray-800 mt-4">File a New Complaint</h2>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           <div>
             <label className="block text-lg font-medium">Issue Code</label>
             <input
@@ -137,126 +134,27 @@ function WomenChildDashboard() {
               placeholder="Enter Service Number"
             />
           </div>
+
           <div>
             <label className="block text-lg font-medium">Issue Type</label>
             <input
               type="text"
               name="issuetype"
-              value={complaint.issuetype
-
-              }
-              onChange={handleInputChange}
+              value={complaint.issuetype}
+              readOnly
               className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-              
             />
           </div>
-        </div>
 
-        {filteredComplaints.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-            <h3 className="text-lg font-bold mb-4">Previous Cases for {complaint.issuetype
-            }</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredComplaints.map((comp, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <p className="font-semibold">{comp.description}</p>
-                  <p className={`text-sm ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
-                    Status: {comp.status}
-                  </p>
-                  <button
-                    onClick={() => handleRepostComplaint(comp.description)}
-                    className="mt-2 py-1 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                  >
-                    Repost the Same Complaint
-                  </button>
-                </motion.div>
-              ))}
-=======
-        <motion.div
-          className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-8 flex flex-col gap-6 mt-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {successMessage && (
-            <motion.div
-              className="w-full text-center text-lg font-semibold text-green-700 bg-green-100 py-2 rounded-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              {successMessage}
-            </motion.div>
-          )}
-
-          <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-lg font-medium">Support Service Number</label>
-              <input
-                type="text"
-                name="serviceNumber"
-                value={complaint.serviceNumber}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                placeholder="Enter Service Number"
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium">Support Service Name</label>
-              <input
-                type="text"
-                name="serviceName"
-                value={complaint.serviceName}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
-                placeholder="Enter Service Name"
-              />
->>>>>>> ab892ce985315050fa1603e86d7521339311db85
-            </div>
-          </div>
-
-          {filteredComplaints.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-              <h3 className="text-lg font-bold mb-4">
-                Previous Cases for {complaint.serviceName}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredComplaints.map((comp, index) => (
-                  <motion.div
-                    key={index}
-                    className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <p className="font-semibold">{comp.description}</p>
-                    <p className={`text-sm ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
-                      Status: {comp.status}
-                    </p>
-                    <button
-                      onClick={() => handleRepostComplaint(comp.description)}
-                      className="mt-2 py-1 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      Repost the Same Complaint
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4">
-            <label className="block text-lg font-medium">Select Case Category</label>
+          <div>
+            <label className="block text-lg font-medium">Category</label>
             <select
               name="category"
               value={complaint.category}
               onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
             >
-              <option value="">Select a category</option>
+              <option value="">Select a Category</option>
               {complaintCategories.map((category, index) => (
                 <option key={index} value={category}>
                   {category}
@@ -265,8 +163,8 @@ function WomenChildDashboard() {
             </select>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-lg font-medium">Choose Date</label>
+          <div>
+            <label className="block text-lg font-medium">Date</label>
             <input
               type="date"
               name="date"
@@ -276,40 +174,59 @@ function WomenChildDashboard() {
             />
           </div>
 
-          <div className="mt-6">
-            <label className="block text-lg font-medium">Complaint Description</label>
+          <div className="col-span-2">
+            <label className="block text-lg font-medium">Description</label>
             <textarea
               name="description"
               value={complaint.description}
               onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Describe your complaint"
-              rows="3"
+              placeholder="Enter Complaint Details"
             />
           </div>
 
-          <div className="mt-4">
-            <label className="block text-lg font-medium">Upload Supporting Document</label>
-            <input
-              type="file"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  setComplaint({ ...complaint, document: file });
-                }
-              }}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-            />
+          <div className="col-span-2">
+            <button
+              type="submit"
+              className="w-full p-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+            >
+              Submit Complaint
+            </button>
           </div>
+        </form>
 
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="w-full py-2 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+        {successMessage && (
+          <motion.div
+            className="mt-4 text-lg font-semibold text-green-700 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
           >
-            Submit Complaint
-          </button>
-        </motion.div>
+            {successMessage}
+          </motion.div>
+        )}
+
+        <h2 className="text-xl font-bold text-gray-800 mt-6">Previous Complaints</h2>
+        <div className="mt-2">
+          {filteredComplaints.length > 0 ? (
+            filteredComplaints.map((comp, index) => (
+              <div key={index} className="p-3 border border-gray-300 rounded-lg mb-2">
+                <p className="text-gray-800">{comp.description}</p>
+                <p className={`font-semibold ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
+                  {comp.status}
+                </p>
+                <button
+                  onClick={() => handleRepostComplaint(comp.description)}
+                  className="mt-2 p-2 bg-gray-200 rounded-lg text-sm"
+                >
+                  Repost
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600">No previous complaints found.</p>
+          )}
+        </div>
       </div>
     </div>
   );
