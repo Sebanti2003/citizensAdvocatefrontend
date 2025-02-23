@@ -1,15 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Moon, Sun } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    const storedDarkMode = localStorage.getItem("darkMode");
-    return storedDarkMode ? JSON.parse(storedDarkMode) : false;
-  });
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(window.scrollY);
 
@@ -27,9 +23,30 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-  }, [darkMode]);
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navbarHeight = 80; // Approximate navbar height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  const navLinks = [
+    { name: "Home", id: "hero" },
+    { name: "How It Works", id: "how-it-works" },
+    { name: "Features", id: "features" },
+    { name: "Ministries", id: "ministries" },
+    { name: "Govt. Benefits", id: "gov-benefits" },
+    { name: "FAQ", id: "faq" },
+    { name: "Contact", id: "contact" },
+  ];
 
   return (
     <motion.nav
@@ -41,56 +58,36 @@ const Navbar = () => {
       }`}
     >
       <div className="w-full px-5 py-2 flex justify-between items-center bg-gradient-to-r from-orange-500 via-white to-green-600 shadow-lg">
-        {/* Logo on the left */}
+        {/* Logo */}
         <Link to="/" className="flex items-center">
           <img src={logo} alt="Logo" className="h-8" />
         </Link>
 
-        {/* Nav Links */}
-        <div className="hidden md:flex items-center space-x-5 text-xs w-full justify-end font-medium">
-          {[
-            { name: "Home", href: "/" },
-            { name: "How It Works", href: "#how-it-works" },
-            { name: "Features", href: "#features" },
-            { name: "Ministries", href: "#ministries" },
-            { name: "Govt. Benefits", href: "#gov-benefits" },
-            { name: "FAQ", href: "#faq" },
-            { name: "Contact", href: "#contact" },
-          ].map((item, index) => (
-            <Link
+        {/* Desktop Nav Links */}
+        <div className="hidden md:flex items-center space-x-5 text-sm font-bold w-full justify-end font-medium">
+          {navLinks.map((item, index) => (
+            <button
               key={index}
-              to={item.href}
+              onClick={() => scrollToSection(item.id)}
               className="relative text-blue-900 hover:text-blue-600 transition-all duration-300 font-semibold"
             >
               {item.name}
-            </Link>
+            </button>
           ))}
 
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="bg-blue-900 p-1 rounded-full"
-          >
-            {darkMode ? (
-              <Sun className="text-yellow-500" size={14} />
-            ) : (
-              <Moon className="text-gray-300" size={14} />
-            )}
-          </button>
-
           {/* CTA Buttons */}
-          <Link
-            to="/user/login"
+          <a
+            href="/user/login"
             className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
           >
-            📢 File a Complaint
-          </Link>
-          <Link
-            to="/govt/login"
+            👤 Employee Registration
+          </a>
+          <a
+            href="/govt/login"
             className="px-3 py-1 bg-orange-500 text-white rounded-md text-xs hover:bg-orange-600"
           >
             🏛️ Government Login
-          </Link>
+          </a>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -105,38 +102,29 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-gradient-to-b from-orange-500 via-white to-green-600 py-2 px-3 flex flex-col space-y-2 shadow-lg text-xs">
-          {[
-            { name: "Home", href: "/" },
-            { name: "How It Works", href: "#how-it-works" },
-            { name: "Features", href: "#features" },
-            { name: "Ministries", href: "#ministries" },
-            { name: "Govt. Benefits", href: "#gov-benefits" },
-            { name: "FAQ", href: "#faq" },
-            { name: "Contact", href: "#contact" },
-          ].map((item, index) => (
-            <Link
+          {navLinks.map((item, index) => (
+            <button
               key={index}
-              to={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="text-blue-900 font-semibold hover:text-blue-600"
+              onClick={() => scrollToSection(item.id)}
+              className="text-blue-900 font-semibold hover:text-blue-600 text-left"
             >
               {item.name}
-            </Link>
+            </button>
           ))}
-          <Link
-            to="/user/selectcategory"
+          <a
+            href="/user/selectcategory"
             className="px-3 py-1 bg-orange-500 text-white rounded-md text-center text-xs hover:bg-orange-600 font-semibold"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             📢 File a Complaint
-          </Link>
-          <Link
-            to="/govt/login"
+          </a>
+          <a
+            href="/govt/login"
             className="px-3 py-1 bg-orange-500 text-white rounded-md text-center text-xs hover:bg-orange-600 font-semibold"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             🏛️ Government Login
-          </Link>
+          </a>
         </div>
       )}
     </motion.nav>

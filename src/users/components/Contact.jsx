@@ -16,7 +16,7 @@ const Contact = () => {
   };
 
   return (
-    <section id="contact" className="w-screen h-screen flex items-center justify-center bg-gray-100 px-6 py-20">
+    <section id="contact" className="w-screen h-screen flex items-center justify-center bg-white px-6 py-20">
 
         {/* Grid lines overlay */}
           <div

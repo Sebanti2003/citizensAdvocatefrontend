@@ -23,7 +23,7 @@ function RailwaysDashboard() {
     "Refund & Payment Problems",
     "Coach & Seat Allocation Issues",
     "Security & Theft Complaints",
-    "Station Facilities (Washrooms, Waiting Rooms, Accessibility)",
+    "Station Facilities",
     "Unauthorized Vendors & Hawkers",
     "Overcrowding & Passenger Safety",
     "Lost & Found Services",
@@ -46,13 +46,9 @@ function RailwaysDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
+    // For trainNumber, simply update the value without auto-populating trainName
     if (name === "trainNumber") {
-      setComplaint({
-        ...complaint,
-        trainNumber: value,
-        trainName: trainData[value] || complaint.trainName
-      });
+      setComplaint({ ...complaint, trainNumber: value });
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
@@ -64,19 +60,6 @@ function RailwaysDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("ministry", "67b0a0b2a3336b7a7862190b");
-    formData.append("trainNumber", complaint.trainNumber);
-    formData.append("trainName", complaint.trainName);
-    formData.append("pnr", complaint.pnr);
-    formData.append("date", complaint.date);
-    formData.append("description", complaint.description);
-    formData.append("category", complaint.category);
-    if (complaint.document) {
-      formData.append("document", complaint.document);
-    }
-
     try {
       const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofrailwaypostcomplaint",
@@ -87,15 +70,13 @@ function RailwaysDashboard() {
           category: complaint.category,
           date: complaint.date,
           description: complaint.description,
-          document: "picimg"
+          document: "picimg",
         },
         {
           withCredentials: true,
         }
       );
-
       const data = response.data;
-      console.log(data);
       if (data) {
         setSuccessMessage("✅ Complaint Submitted Successfully!");
         setComplaint({
@@ -108,12 +89,11 @@ function RailwaysDashboard() {
           document: null,
         });
       } else {
-        setErrorMessage(data.message || "❌ Failed to submit complaint.");
+        setErrorMessage("❌ Failed to submit complaint.");
       }
     } catch (error) {
       setErrorMessage(error.message);
     }
-
     setTimeout(() => {
       setSuccessMessage("");
       setErrorMessage("");
@@ -121,130 +101,136 @@ function RailwaysDashboard() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-gray-100">
-      <motion.h1 className="text-4xl font-extrabold text-blue-800 text-center mt-6">
-        Ministry of Railways Dashboard
-      </motion.h1>
+    <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
+      {/* Background design matching Consumer Affairs Dashboard */}
+      <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
+      <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
-      <motion.div
-        className="w-full max-w-6xl bg-white p-8 rounded-lg shadow-lg mt-6 flex flex-col gap-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {successMessage && (
-          <motion.div
-            className="w-full text-center text-lg font-semibold text-green-700 bg-green-100 py-2 rounded-lg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {successMessage}
-          </motion.div>
-        )}
-
-        {errorMessage && (
-          <motion.div
-            className="w-full text-center text-lg font-semibold text-red-700 bg-red-100 py-2 rounded-lg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {errorMessage}
-          </motion.div>
-        )}
-
-        <h2 className="text-xl font-bold text-gray-800">File a New Complaint</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-lg font-medium">Train Number</label>
-            <input
-              type="text"
-              name="trainNumber"
-              value={complaint.trainNumber}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Enter Train Number"
-            />
-          </div>
-          <div>
-            <label className="block text-lg font-medium">Train Name</label>
-            <input
-              type="text"
-              name="trainName"
-              value={complaint.trainName}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Enter Train Name"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-lg font-medium">PNR Number</label>
-          <input
-            type="text"
-            name="pnr"
-            value={complaint.pnr}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            placeholder="Enter PNR Number"
-          />
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Select Complaint Category</label>
-          <select
-            name="category"
-            value={complaint.category}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">Select a category</option>
-            {complaintCategories.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Choose Date</label>
-          <input
-            type="date"
-            name="date"
-            value={complaint.date}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <div className="mt-6">
-          <label className="block text-lg font-medium">Complaint Description</label>
-          <textarea
-            name="description"
-            value={complaint.description}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            placeholder="Describe your complaint"
-            rows="3"
-          />
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-lg font-medium">Upload Supporting Document</label>
-          <input type="file" onChange={handleFileChange} className="w-full p-2 border border-gray-300 rounded-lg" />
-        </div>
-
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          className="w-full py-2 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+      {/* Main content */}
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-4">
+        <motion.h1 
+          className="text-2xl font-bold text-gray-800 text-center mb-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          Submit Complaint
-        </button>
-      </motion.div>
+          Ministry of Railways Dashboard
+        </motion.h1>
+
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {(successMessage || errorMessage) && (
+            <motion.div
+              className={`mb-3 p-2 rounded-lg text-center ${
+                successMessage ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {successMessage || errorMessage}
+            </motion.div>
+          )}
+
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">File a New Complaint</h2>
+
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Train Number</label>
+                <input
+                  type="text"
+                  name="trainNumber"
+                  value={complaint.trainNumber}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter Train Number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Train Name</label>
+                <input
+                  type="text"
+                  name="trainName"
+                  value={complaint.trainName}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  placeholder="Enter Train Name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">PNR Number</label>
+              <input
+                type="text"
+                name="pnr"
+                value={complaint.pnr}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                placeholder="Enter PNR Number"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Category</label>
+              <select
+                name="category"
+                value={complaint.category}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select a category</option>
+                {complaintCategories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Date</label>
+              <input
+                type="date"
+                name="date"
+                value={complaint.date}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <textarea
+                name="description"
+                value={complaint.description}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                rows="2"
+                placeholder="Describe your complaint"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Supporting Document</label>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Submit Complaint
+            </button>
+          </form>
+        </motion.div>
+      </div>
     </div>
   );
 }

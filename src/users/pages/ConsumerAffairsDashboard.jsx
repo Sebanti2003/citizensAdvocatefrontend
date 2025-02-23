@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 function ConsumerAffairsDashboard() {
   const productData = {
@@ -59,14 +60,10 @@ function ConsumerAffairsDashboard() {
     const { name, value } = e.target;
 
     if (name === "productId") {
+      // Auto-populate productName if available in productData
       const productName = productData[value] || "";
       setComplaint({ ...complaint, productId: value, productName });
-
-      if (sampleComplaints[value]) {
-        setFilteredComplaints(sampleComplaints[value]);
-      } else {
-        setFilteredComplaints([]);
-      }
+      setFilteredComplaints(sampleComplaints[value] || []);
     } else {
       setComplaint({ ...complaint, [name]: value });
     }
@@ -135,15 +132,18 @@ function ConsumerAffairsDashboard() {
                 type="text"
                 name="productName"
                 value={complaint.productName}
+                onChange={handleInputChange}
                 className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                readOnly
+                placeholder="Enter Product Name"
               />
             </div>
           </div>
 
           {filteredComplaints.length > 0 && (
             <div className="bg-white/80 p-4 rounded-lg shadow-md w-full">
-              <h3 className="text-lg font-bold mb-2">Existing Complaints for {complaint.productName}</h3>
+              <h3 className="text-lg font-bold mb-2">
+                Existing Complaints for {complaint.productName}
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredComplaints.map((comp, index) => (
                   <motion.div
@@ -188,8 +188,8 @@ function ConsumerAffairsDashboard() {
             <label className="block text-sm font-medium mb-1">Choose Date</label>
             <input
               type="date"
-              name="date"
-              value={complaint.date}
+              name="purchaseDate"
+              value={complaint.purchaseDate}
               onChange={handleInputChange}
               className="w-full p-2 border border-gray-300 rounded-lg bg-white"
             />
@@ -208,11 +208,10 @@ function ConsumerAffairsDashboard() {
           </div>
 
           <div>
-            <label clas
-sName="block text-sm font-medium mb-1">Upload Supporting Document</label>
-            <input 
-              type="file" 
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white" 
+            <label className="block text-sm font-medium mb-1">Upload Supporting Document</label>
+            <input
+              type="file"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white"
             />
           </div>
 
