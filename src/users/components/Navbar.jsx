@@ -212,7 +212,7 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <a
-            href="/user/login"
+            href="/govt/EmployeeRegistration"
             className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
           >
             👤 Employee Registration
