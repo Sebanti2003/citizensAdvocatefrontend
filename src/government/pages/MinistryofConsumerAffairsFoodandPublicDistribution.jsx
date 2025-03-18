@@ -106,6 +106,7 @@ const MinistryofConsumerAffairs = () => {
   //   );
   // }
   // console.log(selectedComplaint);
+  
   useEffect(() => {
     const fetchComplaints = async () => {
         try {
