@@ -24,11 +24,11 @@ const MinistryofRailways = () => {
     //         try {
     //             const [complaintsRes, employeesRes] = await Promise.all([
     //                 axios.get(
-    //                     `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
+    //                     `https://citiadvo.onrender.com/api/v1/complaints/eachDepartmentalComplaints`,
     //                     { withCredentials: true }
     //                 ),
     //                 axios.get(
-    //                     `http://localhost:3000/api/v1/employees/department/${gov_id}`,
+    //                     `https://citiadvo.onrender.com/api/v1/employees/department/${gov_id}`,
     //                     { withCredentials: true }
     //                 )
     //             ]);
@@ -54,7 +54,7 @@ const MinistryofRailways = () => {
     // const handleAssignEmployee = async (complaintId, employeeId) => {
     //     try {
     //         await axios.put(
-    //             `http://localhost:3000/api/v1/complaints/${complaintId}/assign`,
+    //             `https://citiadvo.onrender.com/api/v1/complaints/${complaintId}/assign`,
     //             { employeeId },
     //             { withCredentials: true }
     //         );
@@ -85,7 +85,7 @@ const MinistryofRailways = () => {
     //     setLoading(true);
     //     setError("");
     //     try {
-    //         await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
+    //         await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`);
     //         navigate(`/govt/login`);
     //     } catch (err) {
     //         console.error(err);
@@ -100,7 +100,7 @@ const MinistryofRailways = () => {
 
     //     setSending(true);
     //     try {
-    //         await axios.post(`http://localhost:3000/api/v1/complaints/respond`, {
+    //         await axios.post(`https://citiadvo.onrender.com/api/v1/complaints/respond`, {
     //             complaintId: selectedComplaint._id,
     //             response: responseText,
     //         });
@@ -134,7 +134,7 @@ const MinistryofRailways = () => {
         const fetchComplaints = async () => {
             try {
                 const response = await axios.get(
-                    `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
+                    `https://citiadvo.onrender.com/api/v1/complaints/eachDepartmentalComplaints`,
                     { withCredentials: true }
                 );
                 setCategories(response.data.categories || []);
@@ -174,7 +174,7 @@ const MinistryofRailways = () => {
         try {
             setSending(true);
 
-            const response = await axios.post(`http://localhost:3000/api/v1/complaints/respond`, {
+            const response = await axios.post(`https://citiadvo.onrender.com/api/v1/complaints/respond`, {
                 complaintId: selectedComplaint.id,
                 response: responseText
             }, { withCredentials: true });
@@ -199,7 +199,7 @@ const MinistryofRailways = () => {
         setLoading(true);
         setError("");
         try {
-            await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
+            await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`);
             setCategories([]);
             setComplaints([]);
             navigate(`/govt/login`);

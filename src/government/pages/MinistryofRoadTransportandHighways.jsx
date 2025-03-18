@@ -18,86 +18,94 @@ const RoadSafetyAndHighways = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchComplaints = async () => {
-            try {
-                const response = await axios.get(
-                    `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
-                    { withCredentials: true }
-                );
+      const fetchComplaints = async () => {
+          try {
+              const response = await axios.get(
+                  `https://citiadvo.onrender.com/api/v1/complaints/eachDepartmentalComplaints`,
+                  { withCredentials: true }
+              );
+              setCategories(response.data.categories || []);
+              setComplaints(response.data.complaints || []);
+          } catch (err) {
+              console.error("Error fetching complaints:", err);
+              setError("Failed to load complaints.");
+          } finally {
+              setLoading(false);
+          }
+      };
+      fetchComplaints();
+  }, []);
 
-                console.log(response.data);
-                setCategories(response.data.categories || []);
-                setComplaints(response.data.complaints || []);
-            } catch (err) {
-                console.error("Error fetching complaints:", err);
-                setError("Failed to load complaints.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchComplaints();
-    }, []);
+  const filteredComplaints = useMemo(() => {
+      if (selectedCategory === "All") return complaints;
+      return complaints.filter(complaint => complaint.category === selectedCategory);
+  }, [selectedCategory, complaints]);
 
-    const filteredComplaints = useMemo(() => {
-        if (selectedCategory === "All") return complaints;
-        return complaints.filter((complaint) => complaint.category === selectedCategory);
-    }, [selectedCategory, complaints]);
+  const openChat = (complaint) => {
+      setSelectedComplaint({
+          ...complaint,
+          messages: complaint.messages || [],
+      });
+      setResponseText("");
+      setIsChatOpen(true);
+  };
 
-    const openChat = (complaint) => {
-        setSelectedComplaint(complaint);
-        setIsChatOpen(true);
-    };
+  const closeChat = () => {
+      setIsChatOpen(false);
+      setResponseText("");
+  };
 
-    const closeChat = () => {
-        setIsChatOpen(false);
-        setResponseText("");
-    };
+  const sendResponse = async () => {
+      if (!responseText.trim()) return;
 
-    const sendResponse = async () => {
-        if (!responseText.trim()) return;
+      try {
+          setSending(true);
 
-        setSending(true);
-        try {
-            await axios.post(`http://localhost:3000/api/v1/complaints/respond`, {
-                complaintId: selectedComplaint._id,
-                response: responseText,
-            });
+          const response = await axios.post(`https://citiadvo.onrender.com/api/v1/complaints/respond`, {
+              complaintId: selectedComplaint.id,
+              response: responseText
+          }, { withCredentials: true });
 
-            // Updating the UI after sending a response
-            setSelectedComplaint((prev) => ({
-                ...prev,
-                messages: [...(prev.messages || []), { text: responseText, sender: "You" }],
-            }));
-            setResponseText("");
-        } catch (err) {
-            console.error("Error sending response:", err);
-        } finally {
-            setSending(false);
-        }
-    };
+          if (response.status === 200) {
+              setSelectedComplaint(prev => ({
+                  ...prev,
+                  messages: [...prev.messages, { text: responseText, sender: "You" }]
+              }));
 
-    const handleLogout = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
-            navigate(`/govt/login`);
-        } catch (err) {
-            console.error(err);
-            setError(err.response?.data?.message || "Error logging out");
-        } finally {
-            setLoading(false);
-        }
-    };
+              setResponseText("");
+          }
+      } catch (err) {
+          console.error("Error sending response:", err);
+          setError("Failed to send response. Please try again.");
+      } finally {
+          setSending(false);
+      }
+  };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-gray-900"></div>
-            </div>
-        );
-    }
+  const handleLogout = async () => {
+      setLoading(true);
+      setError("");
+      try {
+          await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`);
+          setCategories([]);
+          setComplaints([]);
+          navigate(`/govt/login`);
+      } catch (err) {
+          console.error(err);
+          setError(err.response?.data?.message || "Error logging out");
+      } finally {
+          setLoading(false);
+      }
+  };
 
+  if (loading) {
+      return (
+          <div className="flex justify-center items-center h-screen">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-gray-900"></div>
+          </div>
+      );
+  }
+  console.log(selectedComplaint);
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-12 flex flex-col items-center">
             <div className="text-center flex flex-col items-center justify-center gap-4 w-full">
