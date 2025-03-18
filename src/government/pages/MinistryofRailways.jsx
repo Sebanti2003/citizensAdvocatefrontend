@@ -15,70 +15,184 @@ const MinistryofRailways = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [sending, setSending] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [employees, setEmployees] = useState([]);
+    // const [uploadedFiles, setUploadedFiles] = useState([]);
+    // const [employees, setEmployees] = useState([]);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [complaintsRes, employeesRes] = await Promise.all([
-                    axios.get(
-                        `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
-                        { withCredentials: true }
-                    ),
-                    axios.get(
-                        `http://localhost:3000/api/v1/employees/department/${gov_id}`,
-                        { withCredentials: true }
-                    )
-                ]);
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             const [complaintsRes, employeesRes] = await Promise.all([
+    //                 axios.get(
+    //                     `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
+    //                     { withCredentials: true }
+    //                 ),
+    //                 axios.get(
+    //                     `http://localhost:3000/api/v1/employees/department/${gov_id}`,
+    //                     { withCredentials: true }
+    //                 )
+    //             ]);
 
-                setCategories(complaintsRes.data.categories || []);
-                setComplaints(complaintsRes.data.complaints || []);
-                setEmployees(employeesRes.data.employees || []);
+    //             setCategories(complaintsRes.data.categories || []);
+    //             setComplaints(complaintsRes.data.complaints || []);
+    //             setEmployees(employeesRes.data.employees || []);
+    //         } catch (err) {
+    //             console.error("Error fetching data:", err);
+    //             setError("Failed to load data.");
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+    //     fetchData();
+    // }, [gov_id]);
+
+    // const filteredComplaints = useMemo(() => {
+    //     if (selectedCategory === "All") return complaints;
+    //     return complaints.filter((complaint) => complaint.category === selectedCategory);
+    // }, [selectedCategory, complaints]);
+
+    // const handleAssignEmployee = async (complaintId, employeeId) => {
+    //     try {
+    //         await axios.put(
+    //             `http://localhost:3000/api/v1/complaints/${complaintId}/assign`,
+    //             { employeeId },
+    //             { withCredentials: true }
+    //         );
+
+    //         setComplaints(prev => prev.map(complaint => 
+    //             complaint._id === complaintId 
+    //                 ? { ...complaint, assignedEmployee: employees.find(e => e._id === employeeId) } 
+    //                 : complaint
+    //         ));
+    //     } catch (error) {
+    //         console.error("Assignment failed:", error);
+    //         setError("Failed to assign employee.");
+    //     }
+    // };
+
+    // const openChat = (complaint) => {
+    //     setSelectedComplaint(complaint);
+    //     setIsChatOpen(true);
+    // };
+
+    // const closeChat = () => {
+    //     setIsChatOpen(false);
+    //     setResponseText("");
+    //     setUploadedFiles([]);
+    // };
+
+    // const handleLogout = async () => {
+    //     setLoading(true);
+    //     setError("");
+    //     try {
+    //         await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
+    //         navigate(`/govt/login`);
+    //     } catch (err) {
+    //         console.error(err);
+    //         setError(err.response?.data?.message || "Error logging out");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    // const sendResponse = async () => {
+    //     if (!responseText.trim()) return;
+
+    //     setSending(true);
+    //     try {
+    //         await axios.post(`http://localhost:3000/api/v1/complaints/respond`, {
+    //             complaintId: selectedComplaint._id,
+    //             response: responseText,
+    //         });
+
+    //         setSelectedComplaint((prev) => ({
+    //             ...prev,
+    //             messages: [...(prev?.messages || []), { text: responseText, sender: "You" }],
+    //         }));
+    //         setResponseText("");
+    //     } catch (error) {
+    //         console.error("Error sending response:", error);
+    //         setError("Failed to send response.");
+    //     } finally {
+    //         setSending(false);
+    //     }
+    // };
+
+    // const handleFileUpload = (event) => {
+    //     const files = Array.from(event.target.files);
+    //     setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
+    // };
+
+    // if (loading) {
+    //     return (
+    //         <div className="flex justify-center items-center h-screen">
+    //             <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-gray-900"></div>
+    //         </div>
+    //     );
+    // }
+    useEffect(() => {
+        const fetchComplaints = async () => {
+            try {
+                const response = await axios.get(
+                    `http://localhost:3000/api/v1/complaints/eachDepartmentalComplaints`,
+                    { withCredentials: true }
+                );
+                setCategories(response.data.categories || []);
+                setComplaints(response.data.complaints || []);
             } catch (err) {
-                console.error("Error fetching data:", err);
-                setError("Failed to load data.");
+                console.error("Error fetching complaints:", err);
+                setError("Failed to load complaints.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchData();
-    }, [gov_id]);
+        fetchComplaints();
+    }, []);
 
     const filteredComplaints = useMemo(() => {
         if (selectedCategory === "All") return complaints;
-        return complaints.filter((complaint) => complaint.category === selectedCategory);
+        return complaints.filter(complaint => complaint.category === selectedCategory);
     }, [selectedCategory, complaints]);
 
-    const handleAssignEmployee = async (complaintId, employeeId) => {
-        try {
-            await axios.put(
-                `http://localhost:3000/api/v1/complaints/${complaintId}/assign`,
-                { employeeId },
-                { withCredentials: true }
-            );
-            
-            setComplaints(prev => prev.map(complaint => 
-                complaint._id === complaintId 
-                    ? { ...complaint, assignedEmployee: employees.find(e => e._id === employeeId) } 
-                    : complaint
-            ));
-        } catch (error) {
-            console.error("Assignment failed:", error);
-            setError("Failed to assign employee.");
-        }
-    };
-
     const openChat = (complaint) => {
-        setSelectedComplaint(complaint);
+        setSelectedComplaint({
+            ...complaint,
+            messages: complaint.messages || [],
+        });
+        setResponseText("");
         setIsChatOpen(true);
     };
 
     const closeChat = () => {
         setIsChatOpen(false);
         setResponseText("");
-        setUploadedFiles([]);
+    };
+
+    const sendResponse = async () => {
+        if (!responseText.trim()) return;
+
+        try {
+            setSending(true);
+
+            const response = await axios.post(`http://localhost:3000/api/v1/complaints/respond`, {
+                complaintId: selectedComplaint.id,
+                response: responseText
+            }, { withCredentials: true });
+
+            if (response.status === 200) {
+                setSelectedComplaint(prev => ({
+                    ...prev,
+                    messages: [...prev.messages, { text: responseText, sender: "You" }]
+                }));
+
+                setResponseText("");
+            }
+        } catch (err) {
+            console.error("Error sending response:", err);
+            setError("Failed to send response. Please try again.");
+        } finally {
+            setSending(false);
+        }
     };
 
     const handleLogout = async () => {
@@ -86,6 +200,8 @@ const MinistryofRailways = () => {
         setError("");
         try {
             await axios.get(`http://localhost:3000/api/v1/ministry/auth/logout`);
+            setCategories([]);
+            setComplaints([]);
             navigate(`/govt/login`);
         } catch (err) {
             console.error(err);
@@ -95,41 +211,14 @@ const MinistryofRailways = () => {
         }
     };
 
-    const sendResponse = async () => {
-        if (!responseText.trim()) return;
-
-        setSending(true);
-        try {
-            await axios.post(`http://localhost:3000/api/v1/complaints/respond`, {
-                complaintId: selectedComplaint._id,
-                response: responseText,
-            });
-
-            setSelectedComplaint((prev) => ({
-                ...prev,
-                messages: [...(prev?.messages || []), { text: responseText, sender: "You" }],
-            }));
-            setResponseText("");
-        } catch (error) {
-            console.error("Error sending response:", error);
-            setError("Failed to send response.");
-        } finally {
-            setSending(false);
-        }
-    };
-
-    const handleFileUpload = (event) => {
-        const files = Array.from(event.target.files);
-        setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
-    };
-
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-gray-900"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-gray-900"></div>
             </div>
         );
     }
+    console.log(selectedComplaint);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-12 flex flex-col items-center">
@@ -176,7 +265,7 @@ const MinistryofRailways = () => {
                             >
                                 <div className="font-semibold">{complaint.description}</div>
                                 <div className="flex items-center gap-4">
-                                    <select
+                                    {/* <select
                                         value={complaint.assignedEmployee?._id || ""}
                                         onChange={(e) => handleAssignEmployee(complaint._id, e.target.value)}
                                         className="p-2 border rounded-lg bg-white text-sm"
@@ -188,7 +277,7 @@ const MinistryofRailways = () => {
                                                 {employee.name} ({employee.position})
                                             </option>
                                         ))}
-                                    </select>
+                                    </select> */}
                                     <div className="text-gray-600 text-xs">~👤 {complaint.person}</div>
                                 </div>
                             </li>
@@ -287,35 +376,35 @@ const MinistryofRailways = () => {
                             </div>
 
                             <ul>
-                                {uploadedFiles.map((file, index) => (
+                                {/* {uploadedFiles.map((file, index) => (
                                     <li key={index} className="text-gray-700">{file.name}</li>
-                                ))}
+                                ))} */}
                             </ul>
                         </div>
 
                         <div className="p-4 flex items-center gap-2">
-                            <input 
-                                className="flex-1 p-2 border rounded-lg" 
-                                value={responseText} 
-                                onChange={(e) => setResponseText(e.target.value)} 
-                                placeholder="Write a response..." 
+                            <input
+                                className="flex-1 p-2 border rounded-lg"
+                                value={responseText}
+                                onChange={(e) => setResponseText(e.target.value)}
+                                placeholder="Write a response..."
                             />
-                            <button 
+                            <button
                                 className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition"
                                 title="Call"
                             >
                                 <FaPhone />
                             </button>
-                            <label 
+                            <label
                                 className="cursor-pointer bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition"
                                 title="Attach Documents"
                             >
                                 <FaPaperclip />
-                                <input type="file" multiple className="hidden" onChange={handleFileUpload} />
+                                {/* <input type="file" multiple className="hidden" onChange={handleFileUpload} /> */}
                             </label>
-                            <button 
-                                className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition" 
-                                onClick={sendResponse} 
+                            <button
+                                className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"
+                                onClick={sendResponse}
                                 disabled={sending}
                                 title="Send Message"
                             >
