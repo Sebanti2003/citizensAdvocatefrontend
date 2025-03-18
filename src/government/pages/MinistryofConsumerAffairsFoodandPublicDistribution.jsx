@@ -138,7 +138,7 @@ const MinistryofConsumerAffairs = () => {
       </div>
 
       <div className="mt-12 w-full max-w-5xl">
-        <h2 className="text-2xl font-semibold text-green-800">List of Complaints</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">List of Complaints</h2>
         <ul className="mt-4 bg-white shadow-lg rounded-lg p-6 divide-y divide-gray-200">
           {filteredComplaints.length > 0 ? (
             filteredComplaints.map((complaint, index) => (
