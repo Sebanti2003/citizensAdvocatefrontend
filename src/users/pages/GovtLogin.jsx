@@ -17,7 +17,7 @@ function GovtLogin() {
 
     try {
       console.log('Backend URL:', import.meta.env.VITE_BACKEND_URL);
-      const response = await axios.post(`http://localhost:3000/api/v1/ministry/auth/login`, {
+      const response = await axios.post(`https://citiadvo.onrender.com/api/v1/ministry/auth/login`, {
         departmentalid,
         password
       },{
@@ -53,7 +53,8 @@ function GovtLogin() {
   // useEffect(() => {
   //   const fetchMessages = async () => {
   //     try {
-  //       const response = await axios.get(`http://localhost:3000/api/v1/ministry/me`);
+  //       const response = await axios.get(`==> Exited with status 127
+;
   //       console.log(response.data);
   //     } catch (error) {
   //       console.error('Error fetching messages:', error);
