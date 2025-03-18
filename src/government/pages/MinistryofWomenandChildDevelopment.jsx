@@ -86,7 +86,9 @@ const MinistryofWomenChildDevelopment = () => {
     setLoading(true);
     setError("");
     try {
-      await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`);
+      await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`,{
+        withCredentials: true
+      });
       setCategories([]);
       setComplaints([]);
       navigate(`/govt/login`);

@@ -172,19 +172,21 @@ const sendResponse = async () => {
 };
 
 const handleLogout = async () => {
-    setLoading(true);
-    setError("");
-    try {
-        await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`);
-        setCategories([]);
-        setComplaints([]);
-        navigate(`/govt/login`);
-    } catch (err) {
-        console.error(err);
-        setError(err.response?.data?.message || "Error logging out");
-    } finally {
-        setLoading(false);
-    }
+  setLoading(true);
+  setError("");
+  try {
+    await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`,{
+      withCredentials: true
+    });
+    setCategories([]);
+    setComplaints([]);
+    navigate(`/govt/login`);
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.message || "Error logging out");
+  } finally {
+    setLoading(false);
+  }
 };
 
 if (loading) {
