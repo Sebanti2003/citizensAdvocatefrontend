@@ -133,7 +133,7 @@
 
 // export default Navbar;
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -141,7 +141,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(window.scrollY);
-
+  const navigate=useNavigate();
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY.current) {
@@ -211,18 +211,16 @@ const Navbar = () => {
           ))}
 
           {/* CTA Buttons */}
-          <a
-            href="/govt/EmployeeRegistration"
-            className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
+          <div
+            onClick={()=>{navigate('/govt/EmployeeRegistration')}} className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
           >
             👤 Employee Registration
-          </a>
-          <a
-            href="/govt/login"
-            className="px-3 py-1 bg-orange-500 text-white rounded-md text-xs hover:bg-orange-600"
+          </div>
+          <div
+            onClick={()=>{navigate('/govt/login')}} className="px-3 py-1 bg-orange-500 text-white rounded-md text-xs hover:bg-orange-600"
           >
             🏛️ Government Login
-          </a>
+          </div>
         </div>
 
         {/* Mobile Menu Toggle */}
