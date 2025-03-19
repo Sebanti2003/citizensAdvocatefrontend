@@ -38,6 +38,29 @@ const MinistryofRailways = () => {
     fetchComplaints();
   }, []);
 
+  useEffect(() => {
+    const me = async () => {
+      try {
+        const response = await axios.get(
+          `https://citiadvo.onrender.com/api/v1/ministry/me`,
+          { withCredentials: true }
+        );
+        console.log(response.data.user);
+      } catch (err) {
+        console.error("Error fetching complaints:", err);
+        setError("Failed to load complaints.");
+        navigate(`/govt/login`);
+
+      } finally {
+        setLoading(false);
+      }
+    };
+    me();
+  }, [
+    navigate,
+  ]);
+
+
   // Filter complaints based on selected category
   const filteredComplaints = useMemo(() => {
     if (selectedCategory === "All") return complaints;

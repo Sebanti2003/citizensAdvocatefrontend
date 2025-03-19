@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {  useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 function GovtLogin() {
@@ -9,6 +9,26 @@ function GovtLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [redirectToSignUp, setRedirectToSignUp] = useState(false);
+
+
+  useEffect(() => {
+    const me = async () => {
+      try {
+        const response = await axios.get(
+          `https://citiadvo.onrender.com/api/v1/ministry/me`,
+          { withCredentials: true }
+        );
+        console.log(response.data);
+      } catch (err) {
+        console.error("Error fetching complaints:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    me();
+  }, [
+    navigate,
+  ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +40,7 @@ function GovtLogin() {
       const response = await axios.post(`https://citiadvo.onrender.com/api/v1/ministry/auth/login`, {
         departmentalid,
         password
-      },{
+      }, {
         withCredentials: true
       });
 
@@ -54,7 +74,7 @@ function GovtLogin() {
   //   const fetchMessages = async () => {
   //     try {
   //       const response = await axios.get(`==> Exited with status 127
-;
+  ;
   //       console.log(response.data);
   //     } catch (error) {
   //       console.error('Error fetching messages:', error);

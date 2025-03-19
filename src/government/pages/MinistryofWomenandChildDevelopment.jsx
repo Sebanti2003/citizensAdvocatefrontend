@@ -38,6 +38,28 @@ const MinistryofWomenChildDevelopment = () => {
         fetchComplaints();
     }, [gov_id]);
 
+    useEffect(() => {
+        const me = async () => {
+            try {
+                const response = await axios.get(
+                    `https://citiadvo.onrender.com/api/v1/ministry/me`,
+                    { withCredentials: true }
+                );
+                console.log(response.data.user);
+            } catch (err) {
+                console.error("Error fetching complaints:", err);
+                setError("Failed to load complaints.");
+                navigate(`/govt/login`);
+
+            } finally {
+                setLoading(false);
+            }
+        };
+        me();
+    }, [
+        navigate,
+    ]);
+
     const filteredComplaints = useMemo(() => {
         if (selectedCategory === "All") return complaints;
         return complaints.filter((complaint) => complaint.category === selectedCategory);
@@ -248,9 +270,8 @@ const MinistryofWomenChildDevelopment = () => {
                                     selectedComplaint.messages.map((msg, index) => (
                                         <div
                                             key={index}
-                                            className={`mb-2 p-2 rounded-lg ${
-                                                msg.sender === "You" ? "bg-pink-100 text-right" : "bg-gray-200 text-left"
-                                            }`}
+                                            className={`mb-2 p-2 rounded-lg ${msg.sender === "You" ? "bg-pink-100 text-right" : "bg-gray-200 text-left"
+                                                }`}
                                         >
                                             <p className="text-gray-800">{msg.text}</p>
                                         </div>
