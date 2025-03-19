@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
-import { FaTimes, FaPaperPlane } from "react-icons/fa";
+import { FaTimes, FaPaperPlane, FaPhone, FaPaperclip } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from "axios";
 
 const MinistryOfHealthAndFamilyWelfare = () => {
+  // State Management
   const { gov_id } = useParams();
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -14,11 +15,11 @@ const MinistryOfHealthAndFamilyWelfare = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sending, setSending] = useState(false); // ✅ Added missing state
+  const [sending, setSending] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]); // State for uploaded files
   const navigate = useNavigate();
 
   // Fetch complaints from API
-
   useEffect(() => {
     const fetchComplaints = async () => {
       try {
@@ -38,11 +39,13 @@ const MinistryOfHealthAndFamilyWelfare = () => {
     fetchComplaints();
   }, []);
 
+  // Filter complaints based on selected category
   const filteredComplaints = useMemo(() => {
     if (selectedCategory === "All") return complaints;
     return complaints.filter(complaint => complaint.category === selectedCategory);
   }, [selectedCategory, complaints]);
 
+  // Open chat for a specific complaint
   const openChat = (complaint) => {
     setSelectedComplaint({
       ...complaint,
@@ -52,28 +55,33 @@ const MinistryOfHealthAndFamilyWelfare = () => {
     setIsChatOpen(true);
   };
 
+  // Close chat modal
   const closeChat = () => {
     setIsChatOpen(false);
     setResponseText("");
   };
 
+  // Send response to a complaint
   const sendResponse = async () => {
     if (!responseText.trim()) return;
 
     try {
       setSending(true);
 
-      const response = await axios.post(`https://citiadvo.onrender.com/api/v1/complaints/respond`, {
-        complaintId: selectedComplaint.id,
-        response: responseText
-      }, { withCredentials: true });
+      const response = await axios.post(
+        `https://citiadvo.onrender.com/api/v1/complaints/respond`,
+        {
+          complaintId: selectedComplaint.id,
+          response: responseText,
+        },
+        { withCredentials: true }
+      );
 
       if (response.status === 200) {
         setSelectedComplaint(prev => ({
           ...prev,
-          messages: [...prev.messages, { text: responseText, sender: "You" }]
+          messages: [...prev.messages, { text: responseText, sender: "You" }],
         }));
-
         setResponseText("");
       }
     } catch (err) {
@@ -84,12 +92,24 @@ const MinistryOfHealthAndFamilyWelfare = () => {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setUploadedFiles(files);
+  };
+
+  // Handle call action (placeholder)
+  const handleCall = () => {
+    alert("Call functionality not implemented yet.");
+  };
+
+  // Handle logout
   const handleLogout = async () => {
     setLoading(true);
     setError("");
     try {
-      await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`,{
-        withCredentials: true
+      await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`, {
+        withCredentials: true,
       });
       setCategories([]);
       setComplaints([]);
@@ -102,6 +122,7 @@ const MinistryOfHealthAndFamilyWelfare = () => {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -109,9 +130,10 @@ const MinistryOfHealthAndFamilyWelfare = () => {
       </div>
     );
   }
-  console.log(selectedComplaint);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-12 flex flex-col items-center">
+      {/* Header Section */}
       <div className="text-center flex flex-col items-center justify-center gap-4 w-full">
         <div className="flex justify-end w-full">
           <button
@@ -179,72 +201,77 @@ const MinistryOfHealthAndFamilyWelfare = () => {
           exit={{ opacity: 0, scale: 0.8 }}
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
         >
-          <div className="bg-white bg-opacity-90 w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
-
+          <div className="bg-white w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
             {/* Chat Header */}
-            <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
-              <h2 className="text-xl font-semibold">Consumer Complaint Chat</h2>
+            <div className="bg-blue-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
+              <h2 className="text-xl font-semibold">Complaint Chat</h2>
               <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
             </div>
 
             {/* Chat Body */}
             <div className="flex-1 p-6 overflow-y-auto bg-gray-100">
-
-              {/* Product ID */}
+              {/* Hospital ID */}
               <div className="mb-3">
-                <label className="block text-lg font-medium">Product ID</label>
+                <label className="block text-lg font-medium">Hospital ID</label>
                 <input
                   type="text"
-                  value={selectedComplaint.productid || ""}
+                  value={selectedComplaint.transportServiceNumber || "N/A"}
                   className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
                   readOnly
                 />
               </div>
 
-              {/* Product Name */}
+              {/* Hospital Name */}
               <div className="mb-3">
-                <label className="block text-lg font-medium">Product Name</label>
+                <label className="block text-lg font-medium">Hospital Name</label>
                 <input
                   type="text"
-                  value={selectedComplaint.productName || ""}
+                  value={selectedComplaint.transportServiceName || "N/A"}
                   className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
                   readOnly
                 />
               </div>
 
-              {/* Complaint */}
+              {/* Complaint Description */}
               <div className="mb-3">
-                <label className="block text-lg font-medium">Complaint</label>
+                <label className="block text-lg font-medium">Complaint Description</label>
                 <textarea
-                  value={selectedComplaint.description || ""}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
-                  rows="3"
+                  value={selectedComplaint.description || "N/A"}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 resize-none"
                   readOnly
+                  rows={3}
                 />
               </div>
 
               {/* Supporting Documents */}
               <div className="mb-3">
-                <label className="block text-lg font-medium">Supporting Documents</label>
-                {selectedComplaint.documents && selectedComplaint.documents.length > 0 ? (
-                  selectedComplaint.documents.map((doc, index) => (
-                    <div key={index} className="text-blue-600 underline cursor-pointer">
-                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                        Document {index + 1}
-                      </a>
-                    </div>
-                  ))
+                <label className="block text-lg font-medium">Attached Files</label>
+                {uploadedFiles.length > 0 ? (
+                  <ul>
+                    {uploadedFiles.map((file, index) => (
+                      <li key={index} className="text-blue-600 underline cursor-pointer hover:text-blue-800">
+                        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                          {file.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
-                  <p className="text-gray-500">No documents attached.</p>
+                  <p className="text-gray-500">No files attached.</p>
                 )}
               </div>
 
               {/* Messages */}
-              <div className="mt-4 p-4 bg-white rounded-lg shadow">
+              <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">Responses</h3>
-                {selectedComplaint.messages.length > 0 ? (
+                {selectedComplaint.messages && selectedComplaint.messages.length > 0 ? (
                   selectedComplaint.messages.map((msg, index) => (
-                    <div key={index} className={`mb-2 p-2 rounded-lg ${msg.sender === "You" ? "bg-green-200 text-right" : "bg-gray-200 text-left"}`}>
+                    <div
+                      key={index}
+                      className={`mb-2 p-2 rounded-lg ${
+                        msg.sender === "You" ? "bg-blue-100 text-right" : "bg-gray-200 text-left"
+                      }`}
+                    >
                       <p className="text-gray-800">{msg.text}</p>
                     </div>
                   ))
@@ -258,19 +285,40 @@ const MinistryOfHealthAndFamilyWelfare = () => {
             <div className="p-4 bg-gray-200 flex items-center gap-2">
               <input
                 type="text"
-                className="flex-1 p-3 border rounded-lg"
+                className="flex-1 p-2 border rounded-lg"
                 placeholder="Type your response..."
                 value={responseText}
                 onChange={(e) => setResponseText(e.target.value)}
               />
-              <button className="bg-green-600 text-white p-3 rounded-lg" onClick={sendResponse} disabled={sending}>
+              {/* Call Button */}
+              <button
+                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
+                title="Call"
+                onClick={handleCall}
+              >
+                <FaPhone />
+              </button>
+              {/* Attachment Button */}
+              <label
+                className="cursor-pointer bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 transition"
+                title="Attach File"
+              >
+                <FaPaperclip />
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  multiple
+                />
+              </label>
+              {/* Send Button */}
+              <button
+                className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"
+                onClick={sendResponse}
+                disabled={sending}
+                title="Send Message"
+              >
                 {sending ? "Sending..." : <FaPaperPlane />}
-              </button>
-              <button className="bg-blue-500 text-white p-3 rounded-lg">
-                📞 Call
-              </button>
-              <button className="bg-gray-500 text-white p-3 rounded-lg">
-                📎 Attach
               </button>
             </div>
           </div>
