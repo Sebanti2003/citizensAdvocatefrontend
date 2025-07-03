@@ -41,7 +41,7 @@ export default function HeroSection() {
         className="md:w-[60%] text-center md:text-left relative z-10 font-['Oswald']"
       >
         <h1 className="text-[5vw] font-extrabold text-orange-600 uppercase glossy-text">
-          Citizens'
+          Citizens&apos;
         </h1>
         <h1 className="text-[7vw] font-extrabold text-blue-900 uppercase glossy-text">
           Advocate
