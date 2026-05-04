@@ -26,23 +26,42 @@ function WomenChildDashboard() {
     "Dowry & Forced Marriage Cases",
     "Cyber Harassment & Online Safety",
     "Malnutrition & Welfare Program Complaints",
-    "Women's Shelter & Rehabilitation Complaints"
+    "Women's Shelter & Rehabilitation Complaints",
   ];
 
-  const sampleComplaints = {
-    101: [
-      { description: "Need immediate assistance with shelter access.", status: "Pending" },
-      { description: "Seeking counseling services support.", status: "Resolved" },
-    ],
-    202: [
-      { description: "Request for legal aid services.", status: "Pending" },
-      { description: "Follow-up on support program application.", status: "Resolved" },
-    ],
-    303: [
-      { description: "Workplace safety concern report.", status: "Pending" },
-      { description: "Education scholarship inquiry.", status: "Resolved" },
-    ],
-  };
+  // Only ongoing complaints
+  const previousComplaints = [
+    {
+      id: 1,
+      issuecode: "101",
+      issuetype: "Delhi Women's Commission",
+      category: "Domestic Violence & Abuse Complaints",
+      date: "2026-04-12",
+      description:
+        "Need urgent shelter and legal assistance regarding domestic violence case.",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      issuecode: "303",
+      issuetype: "Bangalore Women's Helpline",
+      category: "Women's Education & Employment Complaints",
+      date: "2026-04-22",
+      description:
+        "Scholarship support application is delayed for several months.",
+      status: "Pending",
+    },
+    {
+      id: 3,
+      issuecode: "808",
+      issuetype: "Jaipur Women's Assistance",
+      category: "Cyber Harassment & Online Safety",
+      date: "2026-04-28",
+      description:
+        "Repeated online harassment complaints are not being addressed properly.",
+      status: "Under Review",
+    },
+  ];
 
   const [complaint, setComplaint] = useState({
     issuecode: "",
@@ -53,35 +72,55 @@ function WomenChildDashboard() {
     document: null,
   });
 
-  const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "issuecode") {
       const issuetype = serviceData[value] || "";
+
       setComplaint({
         ...complaint,
         issuecode: value,
         issuetype,
       });
-
-      setFilteredComplaints(sampleComplaints[value] || []);
     } else {
-      setComplaint({ ...complaint, [name]: value });
+      setComplaint({
+        ...complaint,
+        [name]: value,
+      });
     }
   };
 
-  const handleRepostComplaint = (desc) => {
-    setComplaint((prev) => ({
-      ...prev,
-      description: desc,
-    }));
+  const handleFileChange = (e) => {
+    setComplaint({
+      ...complaint,
+      document: e.target.files[0],
+    });
+  };
+
+  // Repost Complaint
+  const handleRepostComplaint = (oldComplaint) => {
+    setComplaint({
+      issuecode: oldComplaint.issuecode,
+      issuetype: oldComplaint.issuetype,
+      category: oldComplaint.category,
+      date: "",
+      description: oldComplaint.description,
+      document: null,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofWomenandChildrenDevelopmentpostcomplaint",
@@ -93,140 +132,239 @@ function WomenChildDashboard() {
           description: complaint.description,
           document: complaint.document || "img",
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
 
       setSuccessMessage("✅ Complaint Submitted Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setComplaint({
+        issuecode: "",
+        issuetype: "",
+        category: "",
+        date: "",
+        description: "",
+        document: null,
+      });
     } catch (error) {
       console.error("Error submitting complaint:", error);
-      setSuccessMessage("❌ Error submitting complaint. Please try again.");
+
+      setErrorMessage("❌ Error submitting complaint. Please try again.");
     }
+
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 3000);
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background design */}
-      <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
+      {/* Background Design */}
+      <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-500 transform -skew-y-6"></div>
+
       <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
-      {/* Main content container */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-6">
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4">
         <motion.h1
-          className="text-4xl font-extrabold text-blue-800 text-center mt-6"
+          className="text-2xl font-bold text-gray-800 text-center mb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
         >
           Women and Child Development Dashboard
         </motion.h1>
 
-        <h2 className="text-xl font-bold text-gray-800 mt-4">File a New Complaint</h2>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-          <div>
-            <label className="block text-lg font-medium">Issue Code</label>
-            <input
-              type="text"
-              name="issuecode"
-              value={complaint.issuecode}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Enter Service Number"
-            />
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium">Issue Type</label>
-            <input
-              type="text"
-              name="issuetype"
-              value={complaint.issuetype}
-              readOnly
-              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium">Category</label>
-            <select
-              name="category"
-              value={complaint.category}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+        {/* Complaint Form */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {(successMessage || errorMessage) && (
+            <motion.div
+              className={`mb-3 p-2 rounded-lg text-center ${
+                successMessage
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
             >
-              <option value="">Select a Category</option>
-              {complaintCategories.map((category, index) => (
-                <option key={index} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
+              {successMessage || errorMessage}
+            </motion.div>
+          )}
 
-          <div>
-            <label className="block text-lg font-medium">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={complaint.date}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-            />
-          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">
+            File a New Complaint
+          </h2>
 
-          <div className="col-span-2">
-            <label className="block text-lg font-medium">Description</label>
-            <textarea
-              name="description"
-              value={complaint.description}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Enter Complaint Details"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Issue Code & Type */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Issue Code
+                </label>
 
-          <div className="col-span-2">
+                <input
+                  type="text"
+                  name="issuecode"
+                  value={complaint.issuecode}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter Issue Code"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Issue Type
+                </label>
+
+                <input
+                  type="text"
+                  name="issuetype"
+                  value={complaint.issuetype}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  placeholder="Issue Type"
+                />
+              </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Category
+              </label>
+
+              <select
+                name="category"
+                value={complaint.category}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select a category</option>
+
+                {complaintCategories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Date
+              </label>
+
+              <input
+                type="date"
+                name="date"
+                value={complaint.date}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Description
+              </label>
+
+              <textarea
+                name="description"
+                value={complaint.description}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                rows="3"
+                placeholder="Enter Complaint Details"
+              />
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Supporting Document
+              </label>
+
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full p-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+              className="w-full py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
             >
               Submit Complaint
             </button>
-          </div>
-        </form>
+          </form>
+        </motion.div>
 
-        {successMessage && (
-          <motion.div
-            className="mt-4 text-lg font-semibold text-green-700 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            {successMessage}
-          </motion.div>
-        )}
+        {/* Ongoing Public Complaints */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Ongoing Public Complaints
+          </h2>
 
-        <h2 className="text-xl font-bold text-gray-800 mt-6">Previous Complaints</h2>
-        <div className="mt-2">
-          {filteredComplaints.length > 0 ? (
-            filteredComplaints.map((comp, index) => (
-              <div key={index} className="p-3 border border-gray-300 rounded-lg mb-2">
-                <p className="text-gray-800">{comp.description}</p>
-                <p className={`font-semibold ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
-                  {comp.status}
+          <div className="space-y-4">
+            {previousComplaints.map((item) => (
+              <motion.div
+                key={item.id}
+                className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-pink-700">
+                      {item.issuetype}
+                    </h3>
+
+                    <p className="text-sm text-gray-600">
+                      Issue Code: {item.issuecode}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Category: {item.category}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Date: {item.date}
+                    </p>
+
+                    <p className="text-sm font-medium mt-1 text-red-600">
+                      Status: {item.status}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleRepostComplaint(item)}
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    Repost Complaint
+                  </button>
+                </div>
+
+                <p className="mt-3 text-gray-700">
+                  {item.description}
                 </p>
-                <button
-                  onClick={() => handleRepostComplaint(comp.description)}
-                  className="mt-2 p-2 bg-gray-200 rounded-lg text-sm"
-                >
-                  Repost
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600">No previous complaints found.</p>
-          )}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

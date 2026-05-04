@@ -1,58 +1,56 @@
 import { useState, useMemo } from "react";
-import { FaSearch, FaCarCrash } from "react-icons/fa";
+import { FaSearch, FaGraduationCap } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-function RoadSafetyAndHighways() {
+function MinistryofEducation() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
 
   const complaintCategories = [
-    "Road & Highway Conditions (Potholes, Damage)",
-    "Traffic Congestion & Management",
-    "Public Transport Service Issues",
-    "Auto & Taxi Fare Complaints",
-    "Drunk & Rash Driving Reports",
-    "Parking Issues & Violations",
-    "Accident & Emergency Response Delays",
-    "License & Permit Issues",
-    "Pollution & Emission Violations",
-    "Road Signage & Traffic Light Malfunctions",
-    "Corruption & Bribery in Transport Department",
+    "Admission Issues",
+    "Exam & Result Issues",
+    "Scholarship & Financial Aid",
+    "Infrastructure & Facilities (Classrooms, Labs, Hostels)",
+    "Faculty & Teaching Quality",
+    "Harassment & Ragging Complaints",
+    "Library & Resource Management",
+    "Online Learning & Digital Access",
+    "Student Grievance & Disciplinary Issues",
+    "Transport & Commute Facilities",
+    "Delay in Degree/Certificate Issuance",
   ];
 
   const [complaints, setComplaints] = useState([
     {
       id: 1,
-      title: "Severe potholes on highway",
-      description: "Road damage causing accidents risk on NH-16.",
+      title: "Delay in exam results",
+      description: "Final semester results not declared on time.",
       status: "Pending",
-      category: "Road & Highway Conditions (Potholes, Damage)",
+      category: "Exam & Result Issues",
       assignedTo: "Unassigned",
     },
     {
       id: 2,
-      title: "Traffic jam not managed",
-      description: "No traffic police during peak hours.",
+      title: "Scholarship not received",
+      description: "Post-matric scholarship pending for months.",
       status: "Under Review",
-      category: "Traffic Congestion & Management",
-      assignedTo: "Ravi Sharma",
+      category: "Scholarship & Financial Aid",
+      assignedTo: "Dr. Sharma",
     },
     {
       id: 3,
-      title: "Overcharging by auto driver",
-      description: "Driver demanded double fare without meter.",
+      title: "Poor classroom infrastructure",
+      description: "Broken benches and non-functional projectors.",
       status: "Resolved",
-      category: "Auto & Taxi Fare Complaints",
-      assignedTo: "Amit Verma",
+      category: "Infrastructure & Facilities (Classrooms, Labs, Hostels)",
+      assignedTo: "Admin Office",
     },
   ]);
 
   const updateStatus = (id, newStatus) => {
     setComplaints((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, status: newStatus } : c
-      )
+      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
     );
   };
 
@@ -88,9 +86,9 @@ function RoadSafetyAndHighways() {
 
         {/* TITLE */}
         <div className="flex items-center gap-3 mb-8">
-          <FaCarCrash className="text-2xl text-yellow-300" />
+          <FaGraduationCap className="text-2xl text-yellow-300" />
           <h1 className="text-xl font-bold">
-            Ministry of Road Transport & Highways
+            Ministry of Education
           </h1>
         </div>
 
@@ -159,10 +157,10 @@ function RoadSafetyAndHighways() {
         {/* HEADER */}
         <div className="mb-6">
           <h1 className="text-4xl font-extrabold text-gray-800">
-            Road Safety Operations Dashboard
+            Education Governance Dashboard
           </h1>
           <p className="text-gray-600">
-            Monitor road, transport & highway complaints
+            Monitor student complaints & institutional issues
           </p>
         </div>
 
@@ -230,4 +228,4 @@ function RoadSafetyAndHighways() {
   );
 }
 
-export default RoadSafetyAndHighways;
+export default MinistryofEducation;

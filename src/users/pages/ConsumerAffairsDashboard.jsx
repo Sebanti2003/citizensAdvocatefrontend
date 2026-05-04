@@ -30,20 +30,39 @@ function ConsumerAffairsDashboard() {
     "Telecom & Internet Service Issues",
   ];
 
-  const sampleComplaints = {
-    1001: [
-      { description: "Received counterfeit product.", status: "Pending" },
-      { description: "Refund not processed after return.", status: "Resolved" },
-    ],
-    1002: [
-      { description: "Order delayed by 2 weeks.", status: "Pending" },
-      { description: "Wrong item delivered.", status: "Resolved" },
-    ],
-    1003: [
-      { description: "Size chart misleading.", status: "Pending" },
-      { description: "Quality different from advertised.", status: "Resolved" },
-    ],
-  };
+  // Only Pending Complaints
+  const previousComplaints = [
+    {
+      id: 1,
+      productid: "1001",
+      productname: "Amazon India",
+      category: "Delayed or Non-Delivery of Orders",
+      date: "2026-04-10",
+      description:
+        "Order delivery has been delayed for more than 10 days.",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      productid: "1002",
+      productname: "Flipkart",
+      category: "Defective or Fake Products",
+      date: "2026-04-18",
+      description:
+        "Received a damaged mobile phone instead of a new one.",
+      status: "Pending",
+    },
+    {
+      id: 3,
+      productid: "1008",
+      productname: "Airtel",
+      category: "Telecom & Internet Service Issues",
+      date: "2026-04-22",
+      description:
+        "Internet service has been down frequently for the past week.",
+      status: "Pending",
+    },
+  ];
 
   const [complaint, setComplaint] = useState({
     productid: "",
@@ -54,26 +73,43 @@ function ConsumerAffairsDashboard() {
     document: null,
   });
 
-  const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "productid") {
       const productname = productData[value] || "";
-      setComplaint({ ...complaint, productid: value, productname });
-      setFilteredComplaints(sampleComplaints[value] || []);
+
+      setComplaint({
+        ...complaint,
+        productid: value,
+        productname,
+      });
     } else {
-      setComplaint({ ...complaint, [name]: value });
+      setComplaint({
+        ...complaint,
+        [name]: value,
+      });
     }
   };
 
-  const handleRepostComplaint = (desc) => {
-    setComplaint((prev) => ({
-      ...prev,
-      description: desc,
-    }));
+  // Repost Complaint
+  const handleRepostComplaint = (oldComplaint) => {
+    setComplaint({
+      productid: oldComplaint.productid,
+      productname: oldComplaint.productname,
+      category: oldComplaint.category,
+      date: "",
+      description: oldComplaint.description,
+      document: null,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -95,25 +131,45 @@ function ConsumerAffairsDashboard() {
         }
       );
 
-      setSuccessMessage("✅ Complaint Submitted Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      const data = response.data;
+
+      if (data) {
+        setSuccessMessage("✅ Complaint Submitted Successfully!");
+
+        setComplaint({
+          productid: "",
+          productname: "",
+          category: "",
+          date: "",
+          description: "",
+          document: null,
+        });
+      } else {
+        setErrorMessage("❌ Failed to submit complaint.");
+      }
     } catch (error) {
       console.error("Error submitting complaint:", error);
-      setSuccessMessage("❌ Failed to submit complaint. Please try again.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setErrorMessage("❌ Failed to submit complaint. Please try again.");
     }
+
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 3000);
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background design */}
+      {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
-      <div className="fixed inset-0 bg-white opacity-10"></div>
 
-      {/* Main content container */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-6">
+      <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
+
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4">
         <motion.h1
-          className="text-4xl font-extrabold text-blue-800 text-center mb-6"
+          className="text-2xl md:text-4xl font-extrabold text-blue-800 text-center mb-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -121,32 +177,38 @@ function ConsumerAffairsDashboard() {
           Ministry of Consumer Affairs
         </motion.h1>
 
+        {/* Complaint Form */}
         <motion.div
-          className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-8 flex flex-col gap-6"
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 md:p-8 mb-6 flex flex-col gap-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {successMessage && (
+          {(successMessage || errorMessage) && (
             <motion.div
               className={`w-full text-center text-lg font-semibold py-2 rounded-lg ${
-                successMessage.includes("❌")
-                  ? "text-red-700 bg-red-100"
-                  : "text-green-700 bg-green-100"
+                successMessage
+                  ? "text-green-700 bg-green-100"
+                  : "text-red-700 bg-red-100"
               }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
             >
-              {successMessage}
+              {successMessage || errorMessage}
             </motion.div>
           )}
 
-          <h2 className="text-2xl font-bold text-gray-800">File a New Complaint</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            File a New Complaint
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Product ID */}
             <div>
-              <label className="block text-lg font-medium">Product/Service ID</label>
+              <label className="block text-lg font-medium">
+                Product/Service ID
+              </label>
+
               <input
                 type="text"
                 name="productid"
@@ -156,8 +218,13 @@ function ConsumerAffairsDashboard() {
                 placeholder="Enter Product/Service ID"
               />
             </div>
+
+            {/* Product Name */}
             <div>
-              <label className="block text-lg font-medium">Product/Service Name</label>
+              <label className="block text-lg font-medium">
+                Product/Service Name
+              </label>
+
               <input
                 type="text"
                 name="productname"
@@ -169,40 +236,12 @@ function ConsumerAffairsDashboard() {
             </div>
           </div>
 
-          {filteredComplaints.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-              <h3 className="text-lg font-bold mb-4">
-                Existing Complaints for {complaint.productname}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredComplaints.map((comp, index) => (
-                  <motion.div
-                    key={index}
-                    className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <p className="font-semibold">{comp.description}</p>
-                    <p
-                      className={`text-sm ${
-                        comp.status === "Resolved" ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      Status: {comp.status}
-                    </p>
-                    <button
-                      onClick={() => handleRepostComplaint(comp.description)}
-                      className="mt-2 py-1 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      Repost the Same Complaint
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Category */}
+          <div>
+            <label className="block text-lg font-medium">
+              Select Category
+            </label>
 
-          <div className="mt-4">
-            <label className="block text-lg font-medium">Select Category</label>
             <select
               name="category"
               value={complaint.category}
@@ -210,6 +249,7 @@ function ConsumerAffairsDashboard() {
               className="w-full p-2 border border-gray-300 rounded-lg"
             >
               <option value="">Select a category</option>
+
               {categories.map((category, index) => (
                 <option key={index} value={category}>
                   {category}
@@ -218,8 +258,12 @@ function ConsumerAffairsDashboard() {
             </select>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-lg font-medium">Choose Date</label>
+          {/* Date */}
+          <div>
+            <label className="block text-lg font-medium">
+              Choose Date
+            </label>
+
             <input
               type="date"
               name="date"
@@ -229,8 +273,12 @@ function ConsumerAffairsDashboard() {
             />
           </div>
 
-          <div className="mt-6">
-            <label className="block text-lg font-medium">Complaint Description</label>
+          {/* Description */}
+          <div>
+            <label className="block text-lg font-medium">
+              Complaint Description
+            </label>
+
             <textarea
               name="description"
               value={complaint.description}
@@ -241,13 +289,70 @@ function ConsumerAffairsDashboard() {
             />
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             onClick={handleSubmit}
-            className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition mt-4"
+            className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
           >
             Submit Complaint
           </button>
+        </motion.div>
+
+        {/* Previous Complaints Section */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 md:p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Similar Pending Complaints
+          </h2>
+
+          <div className="space-y-4">
+            {previousComplaints.map((item) => (
+              <motion.div
+                key={item.id}
+                className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-700">
+                      {item.productname}
+                    </h3>
+
+                    <p className="text-sm text-gray-600">
+                      Product ID: {item.productid}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Category: {item.category}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Date: {item.date}
+                    </p>
+
+                    <p className="text-sm font-medium mt-1 text-red-600">
+                      Status: {item.status}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleRepostComplaint(item)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    Repost Complaint
+                  </button>
+                </div>
+
+                <p className="mt-3 text-gray-700">
+                  {item.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </div>

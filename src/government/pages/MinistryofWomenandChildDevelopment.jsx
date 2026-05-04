@@ -1,332 +1,229 @@
-import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router";
-import { FaTimes, FaPaperPlane, FaPhone, FaPaperclip } from "react-icons/fa";
+import { useState, useMemo } from "react";
+import { FaSearch, FaFemale } from "react-icons/fa";
 import { motion } from "framer-motion";
-import axios from "axios";
 
-const MinistryofWomenChildDevelopment = () => {
-    const { gov_id } = useParams();
-    const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState("All");
-    const [complaints, setComplaints] = useState([]);
-    const [selectedComplaint, setSelectedComplaint] = useState(null);
-    const [responseText, setResponseText] = useState("");
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [sending, setSending] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState([]); // State for uploaded files
-    const navigate = useNavigate();
+function MinistryofWomenChildDevelopment() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
-    useEffect(() => {
-        const fetchComplaints = async () => {
-            try {
-                const response = await axios.get(
-                    `https://citiadvo.onrender.com/api/v1/complaints/eachDepartmentalComplaints`,
-                    { withCredentials: true }
-                );
-                console.log(response.data);
-                setCategories(response.data.categories || []);
-                setComplaints(response.data.complaints || []);
-            } catch (err) {
-                console.error("Error fetching complaints:", err);
-                setError("Failed to load complaints.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchComplaints();
-    }, [gov_id]);
+  const complaintCategories = [
+    "Domestic Violence & Abuse Complaints",
+    "Child Labor & Exploitation",
+    "Sexual Harassment & Workplace Safety",
+    "Maternity & Childcare Facilities Issues",
+    "Child Adoption & Foster Care Issues",
+    "Women's Education & Employment Complaints",
+    "Dowry & Forced Marriage Cases",
+    "Cyber Harassment & Online Safety",
+    "Malnutrition & Welfare Program Complaints",
+    "Women's Shelter & Rehabilitation Complaints",
+  ];
 
-    useEffect(() => {
-        const me = async () => {
-            try {
-                const response = await axios.get(
-                    `https://citiadvo.onrender.com/api/v1/ministry/me`,
-                    { withCredentials: true }
-                );
-                console.log(response.data.user);
-            } catch (err) {
-                console.error("Error fetching complaints:", err);
-                setError("Failed to load complaints.");
-                navigate(`/govt/login`);
+  const [complaints, setComplaints] = useState([
+    {
+      id: 1,
+      title: "Domestic abuse complaint",
+      description: "Severe domestic violence reported by victim.",
+      status: "Pending",
+      category: "Domestic Violence & Abuse Complaints",
+      assignedTo: "Unassigned",
+    },
+    {
+      id: 2,
+      title: "Workplace harassment case",
+      description: "Harassment reported at private company office.",
+      status: "Under Review",
+      category: "Sexual Harassment & Workplace Safety",
+      assignedTo: "Priya Sharma",
+    },
+    {
+      id: 3,
+      title: "Child nutrition issue",
+      description: "Malnutrition reported in rural anganwadi center.",
+      status: "Resolved",
+      category: "Malnutrition & Welfare Program Complaints",
+      assignedTo: "Anjali Verma",
+    },
+  ]);
 
-            } finally {
-                setLoading(false);
-            }
-        };
-        me();
-    }, [
-        navigate,
-    ]);
-
-    const filteredComplaints = useMemo(() => {
-        if (selectedCategory === "All") return complaints;
-        return complaints.filter((complaint) => complaint.category === selectedCategory);
-    }, [selectedCategory, complaints]);
-
-    const openChat = (complaint) => {
-        setSelectedComplaint(complaint);
-        setIsChatOpen(true);
-    };
-
-    const closeChat = () => {
-        setIsChatOpen(false);
-        setResponseText("");
-        setUploadedFiles([]); // Clear uploaded files when closing the chat
-    };
-
-    const sendResponse = async () => {
-        if (!responseText.trim()) return;
-        setSending(true);
-        try {
-            await axios.post(
-                `https://citiadvo.onrender.com/api/v1/complaints/respond`,
-                { message: responseText },
-                { withCredentials: true }
-            );
-            setSelectedComplaint((prev) => ({
-                ...prev,
-                messages: [...prev.messages, { sender: "You", text: responseText }],
-            }));
-            setResponseText("");
-        } catch (err) {
-            console.error("Error sending response:", err);
-            setError("Failed to send response.");
-        } finally {
-            setSending(false);
-        }
-    };
-
-    const handleLogout = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            await axios.get(`https://citiadvo.onrender.com/api/v1/ministry/auth/logout`, { withCredentials: true });
-            navigate(`/govt/login`);
-        } catch (err) {
-            console.error(err);
-            setError(err.response?.data?.message || "Error logging out");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Handle file upload
-    const handleFileUpload = (event) => {
-        const files = Array.from(event.target.files);
-        setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
-    };
-
-    // Handle call initiation
-    const handleCall = () => {
-        const phoneNumber = "1234567890"; // Replace with the actual phone number
-        window.open(`tel:${phoneNumber}`, "_blank"); // Open phone dialer
-    };
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-gray-900"></div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 p-6 md:p-12 flex flex-col items-center">
-            <div className="text-center flex flex-col items-center justify-center gap-4 w-full">
-                <div className="flex justify-end w-full">
-                    <button
-                        className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition"
-                        onClick={handleLogout}
-                    >
-                        Logout
-                    </button>
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
-                    Ministry of Women & Child Development 👩‍👧‍👦
-                </h1>
-                <p className="text-gray-600 max-md:text-sm text-lg mt-2 font-semibold">
-                    Addressing issues related to women’s rights, child welfare, and social development.
-                </p>
-                <p className="text-gray-500">
-                    Department ID: <b>{gov_id}</b>
-                </p>
-            </div>
-
-            {/* Category Selection */}
-            <div className="mt-8 w-full max-w-md">
-                <label className="block text-lg text-gray-700 font-semibold mb-2">Select Category</label>
-                <select
-                    className="w-full p-3 rounded-lg border border-gray-300 focus:ring focus:ring-pink-300 transition"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                    <option value="All">All</option>
-                    {categories.map((category, index) => (
-                        <option key={index} value={category}>
-                            {category}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            {error && <p className="text-red-500">{error}</p>}
-
-            {/* Complaints Section */}
-            <div className="mt-12 w-full max-w-5xl">
-                <h2 className="text-2xl font-semibold text-gray-800">List of Complaints</h2>
-                <ul className="mt-4 bg-white flex flex-col gap-2 shadow-lg rounded-lg p-6 divide-y divide-gray-200">
-                    {filteredComplaints.length > 0 ? (
-                        filteredComplaints.map((complaint, index) => (
-                            <li
-                                key={index}
-                                className="py-3 px-4 bg-gray-50 border border-gray-200 flex justify-between items-center hover:bg-gray-100 transition rounded-md cursor-pointer"
-                                onClick={() => openChat(complaint)}
-                            >
-                                <div className="flex max-md:text-sm justify-center items-center gap-3 capitalize font-semibold">
-                                    <div>{complaint.description}</div>
-                                </div>
-                                <div className="text-gray-600 text-xs">~👤 {complaint.person}</div>
-                            </li>
-                        ))
-                    ) : (
-                        <p className="text-gray-500 text-center py-4">No complaints found.</p>
-                    )}
-                </ul>
-            </div>
-
-            {/* Chat Modal */}
-            {isChatOpen && selectedComplaint && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-                >
-                    <div className="bg-white w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
-                        {/* Chat Header */}
-                        <div className="bg-pink-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
-                            <h2 className="text-xl font-semibold">Complaint Chat</h2>
-                            <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
-                        </div>
-
-                        {/* Chat Body */}
-                        <div className="flex-1 p-6 overflow-y-auto bg-gray-100">
-                            {/* Issue Code */}
-                            <div className="mb-3">
-                                <label className="block text-lg font-medium">Issue Code</label>
-                                <input
-                                    type="text"
-                                    value={selectedComplaint.issueCode || "N/A"}
-                                    className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    readOnly
-                                />
-                            </div>
-
-                            {/* Issue Type */}
-                            <div className="mb-3">
-                                <label className="block text-lg font-medium">Issue Type</label>
-                                <input
-                                    type="text"
-                                    value={selectedComplaint.issueType || "N/A"}
-                                    className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    readOnly
-                                />
-                            </div>
-
-                            {/* Description */}
-                            <div className="mb-3">
-                                <label className="block text-lg font-medium">Description</label>
-                                <textarea
-                                    value={selectedComplaint.description || "N/A"}
-                                    className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 resize-none"
-                                    readOnly
-                                    rows={3}
-                                />
-                            </div>
-
-                            {/* Uploaded Files */}
-                            <div className="mb-3">
-                                <label className="block text-lg font-medium">Attached Files</label>
-                                {uploadedFiles.length > 0 ? (
-                                    <ul>
-                                        {uploadedFiles.map((file, index) => (
-                                            <li key={index} className="text-blue-600 underline cursor-pointer hover:text-blue-800">
-                                                <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-                                                    {file.name}
-                                                </a>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-gray-500">No files attached.</p>
-                                )}
-                            </div>
-
-                            {/* Messages */}
-                            <div className="mt-4">
-                                <h3 className="text-lg font-semibold mb-2">Responses</h3>
-                                {selectedComplaint.messages && selectedComplaint.messages.length > 0 ? (
-                                    selectedComplaint.messages.map((msg, index) => (
-                                        <div
-                                            key={index}
-                                            className={`mb-2 p-2 rounded-lg ${msg.sender === "You" ? "bg-pink-100 text-right" : "bg-gray-200 text-left"
-                                                }`}
-                                        >
-                                            <p className="text-gray-800">{msg.text}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500 text-center">No messages yet.</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Chat Footer */}
-                        <div className="p-4 bg-gray-200 flex items-center gap-2">
-                            <input
-                                type="text"
-                                className="flex-1 p-2 border rounded-lg"
-                                placeholder="Type your response..."
-                                value={responseText}
-                                onChange={(e) => setResponseText(e.target.value)}
-                            />
-                            {/* Call Button */}
-                            <button
-                                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
-                                title="Call"
-                                onClick={handleCall}
-                            >
-                                <FaPhone />
-                            </button>
-                            {/* Attachment Button */}
-                            <label
-                                className="cursor-pointer bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 transition"
-                                title="Attach File"
-                            >
-                                <FaPaperclip />
-                                <input
-                                    type="file"
-                                    className="hidden"
-                                    onChange={handleFileUpload}
-                                    multiple
-                                />
-                            </label>
-                            {/* Send Button */}
-                            <button
-                                className="bg-pink-600 text-white p-2 rounded-lg hover:bg-pink-700 transition"
-                                onClick={sendResponse}
-                                disabled={sending}
-                                title="Send Message"
-                            >
-                                {sending ? "Sending..." : <FaPaperPlane />}
-                            </button>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-        </div>
+  const updateStatus = (id, newStatus) => {
+    setComplaints((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
     );
-};
+  };
+
+  const filtered = useMemo(() => {
+    return complaints.filter((c) => {
+      const matchSearch =
+        c.title.toLowerCase().includes(search.toLowerCase()) ||
+        c.description.toLowerCase().includes(search.toLowerCase());
+
+      const matchStatus =
+        statusFilter === "All" || c.status === statusFilter;
+
+      const matchCategory =
+        categoryFilter === "All" || c.category === categoryFilter;
+
+      return matchSearch && matchStatus && matchCategory;
+    });
+  }, [complaints, search, statusFilter, categoryFilter]);
+
+  const statusColor = (status) => {
+    if (status === "Resolved")
+      return "bg-emerald-500 text-white shadow-emerald-200";
+    if (status === "Under Review")
+      return "bg-pink-500 text-white shadow-pink-200";
+    return "bg-purple-500 text-white shadow-purple-200";
+  };
+
+  return (
+    <div className="min-h-screen flex bg-gradient-to-br from-pink-50 via-purple-50 to-rose-100">
+
+      {/* SIDEBAR */}
+      <div className="w-80 bg-gradient-to-b from-purple-900 via-pink-900 to-rose-900 text-white shadow-2xl p-6">
+
+        {/* TITLE */}
+        <div className="flex items-center gap-3 mb-8">
+          <FaFemale className="text-2xl text-pink-300" />
+          <h1 className="text-xl font-bold">
+            Women & Child Dev.
+          </h1>
+        </div>
+
+        {/* SEARCH */}
+        <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg mb-6">
+          <FaSearch className="text-white/70" />
+          <input
+            className="bg-transparent w-full outline-none text-white placeholder-white/60"
+            placeholder="Search complaints..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* STATUS */}
+        <h2 className="text-sm font-bold text-white/70 mb-2">
+          STATUS
+        </h2>
+
+        {["All", "Pending", "Under Review", "Resolved"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`w-full text-left px-4 py-2 rounded-lg mb-2 transition ${
+              statusFilter === s
+                ? "bg-pink-400 text-black font-bold"
+                : "hover:bg-white/10"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+
+        {/* CATEGORY */}
+        <h2 className="text-sm font-bold text-white/70 mt-6 mb-2">
+          CATEGORIES
+        </h2>
+
+        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+          <button
+            onClick={() => setCategoryFilter("All")}
+            className="w-full text-left px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20"
+          >
+            All Categories
+          </button>
+
+          {complaintCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                categoryFilter === cat
+                  ? "bg-rose-400 text-white font-semibold"
+                  : "hover:bg-white/10"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* MAIN AREA */}
+      <div className="flex-1 p-8">
+
+        {/* HEADER */}
+        <div className="mb-6">
+          <h1 className="text-4xl font-extrabold text-gray-800">
+            Women & Child Development Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Monitor welfare, safety & protection complaints
+          </p>
+        </div>
+
+        {/* CARDS */}
+        <div className="grid gap-5">
+          {filtered.map((c) => (
+            <motion.div
+              key={c.id}
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-lg p-6 border-l-8 border-pink-500"
+            >
+              <div className="flex justify-between">
+
+                {/* LEFT */}
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {c.title}
+                  </h2>
+
+                  <p className="text-gray-500 mt-1">
+                    {c.description}
+                  </p>
+
+                  <div className="mt-3 text-sm text-pink-600 font-semibold">
+                    {c.category}
+                  </div>
+
+                  <div className="text-sm text-gray-400">
+                    Assigned: {c.assignedTo}
+                  </div>
+                </div>
+
+                {/* RIGHT */}
+                <div className="text-right">
+
+                  <span
+                    className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(
+                      c.status
+                    )}`}
+                  >
+                    {c.status}
+                  </span>
+
+                  <div className="mt-4">
+                    <select
+                      value={c.status}
+                      onChange={(e) =>
+                        updateStatus(c.id, e.target.value)
+                      }
+                      className="border p-2 rounded-lg text-sm shadow-md"
+                    >
+                      <option>Pending</option>
+                      <option>Under Review</option>
+                      <option>Resolved</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default MinistryofWomenChildDevelopment;

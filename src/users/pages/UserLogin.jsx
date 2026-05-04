@@ -29,7 +29,7 @@ function UserLogin() {
       });
 
       console.log('Login successful:', response.data);
-      navigate('/SelectCategory'); // ✅ Redirecting to dashboard after successful login
+      navigate('/user/citizendashboard'); // ✅ Redirecting to dashboard after successful login
     } catch (error) {
       console.error('Login failed:', error.response?.data?.message);
       setError(error.response?.data?.message || 'Invalid credentials ❌');

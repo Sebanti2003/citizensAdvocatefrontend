@@ -1,356 +1,240 @@
-import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router";
-import { FaTimes, FaPaperPlane, FaSignOutAlt, FaPhone, FaPaperclip } from "react-icons/fa";
+import { useState, useMemo } from "react";
+import { FaSearch, FaShoppingCart } from "react-icons/fa";
 import { motion } from "framer-motion";
-import axios from "axios";
 
-const MinistryofConsumerAffairs = () => {
-  const { gov_id } = useParams();
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [complaints, setComplaints] = useState([]);
-  const [selectedComplaint, setSelectedComplaint] = useState(null);
-  const [responseText, setResponseText] = useState("");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [sending, setSending] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState([]); // State for uploaded files
-  const navigate = useNavigate();
+function MinistryofConsumerAffairs() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
-  // Fetch complaints from API
-  useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const response = await axios.get(
-          `https://citiadvo.onrender.com/api/v1/complaints/eachDepartmentalComplaints`,
-          { withCredentials: true }
-        );
-        setCategories(response.data.categories || []);
-        setComplaints(response.data.complaints || []);
-      } catch (err) {
-        console.error("Error fetching complaints:", err);
-        setError("Failed to load complaints.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchComplaints();
-  }, []);
-  useEffect(() => {
-    const me = async () => {
-      try {
-        const response = await axios.get(
-          `https://citiadvo.onrender.com/api/v1/ministry/me`,
-          { withCredentials: true }
-        );
-        console.log(response.data.user);
-      } catch (err) {
-        console.error("Error fetching complaints:", err);
-        setError("Failed to load complaints.");
-        navigate(`/govt/login`);
+  // ✅ ONLY CATEGORY CHANGED
+  const complaintCategories = [
+    "Defective or Fake Products",
+    "Online Shopping Scams",
+    "Delayed or Non-Delivery of Orders",
+    "Misleading Advertisements",
+    "Poor Customer Service & Refund Issues",
+    "Price Hike & Overcharging",
+    "Food Adulteration & Expired Products",
+    "Warranty & Guarantee Violations",
+    "Fraudulent Business Practices",
+    "Electricity & Water Bill Complaints",
+    "Telecom & Internet Service Issues",
+  ];
 
-      } finally {
-        setLoading(false);
-      }
-    };
-    me();
-  }, [
-    navigate,
+  // ✅ ONLY DATA CHANGED
+  const [complaints, setComplaints] = useState([
+    {
+      id: 1,
+      title: "Fake product delivered",
+      description: "Received duplicate branded shoes from online store.",
+      status: "Pending",
+      category: "Defective or Fake Products",
+      assignedTo: "Unassigned",
+    },
+    {
+      id: 2,
+      title: "Refund not processed",
+      description: "Refund not received after order cancellation.",
+      status: "Under Review",
+      category: "Delayed or Non-Delivery of Orders",
+      assignedTo: "Ravi Sharma",
+    },
+    {
+      id: 3,
+      title: "Overcharging issue",
+      description: "Shop charged more than MRP for packaged goods.",
+      status: "Resolved",
+      category: "Price Hike & Overcharging",
+      assignedTo: "Amit Verma",
+    },
   ]);
 
-
-  // Filter complaints based on selected category
-  const filteredComplaints = useMemo(() => {
-    if (selectedCategory === "All") return complaints;
-    return complaints.filter((complaint) => complaint.category === selectedCategory);
-  }, [selectedCategory, complaints]);
-
-  // Open chat for a specific complaint
-  const openChat = (complaint) => {
-    setSelectedComplaint({
-      ...complaint,
-      messages: complaint.messages || [],
-    });
-    setResponseText("");
-    setIsChatOpen(true);
-  };
-
-  // Close chat modal
-  const closeChat = () => {
-    setIsChatOpen(false);
-    setResponseText("");
-    setUploadedFiles([]); // Clear uploaded files when closing chat
-  };
-
-  // Send response to a complaint
-  const sendResponse = async () => {
-    if (!responseText.trim()) return;
-
-    try {
-      setSending(true);
-
-      const response = await axios.post(
-        `https://citiadvo.onrender.com/api/v1/complaints/respond`,
-        {
-          complaintId: selectedComplaint.id,
-          response: responseText,
-        },
-        { withCredentials: true }
-      );
-
-      if (response.status === 200) {
-        setSelectedComplaint((prev) => ({
-          ...prev,
-          messages: [...prev.messages, { text: responseText, sender: "You" }],
-        }));
-        setResponseText("");
-      }
-    } catch (err) {
-      console.error("Error sending response:", err);
-      setError("Failed to send response. Please try again.");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  // Handle file upload
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files);
-    setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
-  };
-
-  // Handle call functionality (placeholder)
-  const handleCall = () => {
-    alert("Call functionality not implemented yet.");
-  };
-
-  // Handle logout
-  const handleLogout = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      await axios.get(
-        `https://citiadvo.onrender.com/api/v1/ministry/auth/logout`,
-        { withCredentials: true }
-      );
-      setCategories([]);
-      setComplaints([]);
-      navigate(`/govt/login`);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Error logging out");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-gray-900"></div>
-      </div>
+  const updateStatus = (id, newStatus) => {
+    setComplaints((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, status: newStatus } : c
+      )
     );
-  }
+  };
+
+  const filtered = useMemo(() => {
+    return complaints.filter((c) => {
+      const matchSearch =
+        c.title.toLowerCase().includes(search.toLowerCase()) ||
+        c.description.toLowerCase().includes(search.toLowerCase());
+
+      const matchStatus =
+        statusFilter === "All" || c.status === statusFilter;
+
+      const matchCategory =
+        categoryFilter === "All" || c.category === categoryFilter;
+
+      return matchSearch && matchStatus && matchCategory;
+    });
+  }, [complaints, search, statusFilter, categoryFilter]);
+
+  const statusColor = (status) => {
+    if (status === "Resolved")
+      return "bg-green-500 text-white shadow-green-200";
+    if (status === "Under Review")
+      return "bg-yellow-500 text-white shadow-yellow-200";
+    return "bg-red-500 text-white shadow-red-200";
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-6 md:p-12 flex flex-col items-center relative">
-      {/* Logout Button */}
-      <button
-        onClick={handleLogout}
-        className="absolute top-4 right-6 bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700"
-      >
-        <FaSignOutAlt /> Logout
-      </button>
+    <div className="min-h-screen flex bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100">
 
-      {/* Header Section */}
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
-        Ministry of Consumer Affairs 🏪
-      </h1>
-      <p className="text-gray-500">Department ID: <b>{gov_id}</b></p>
+      {/* SIDEBAR */}
+      <div className="w-80 bg-gradient-to-b from-indigo-900 via-blue-900 to-indigo-800 text-white shadow-2xl p-6">
 
-      {/* Error Message */}
-      {error && <p className="text-red-500 mt-4">{error}</p>}
+        {/* TITLE */}
+        <div className="flex items-center gap-3 mb-8">
+          <FaShoppingCart className="text-2xl text-yellow-300" />
+          <h1 className="text-xl font-bold">
+            Ministry of Consumer Affairs
+          </h1>
+        </div>
 
-      {/* Category Selection */}
-      <div className="mt-8 w-full max-w-md">
-        <label className="block text-lg text-gray-700 font-semibold mb-2">Select Category</label>
-        <select
-          className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-400 transition bg-white"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          <option value="All">All</option>
-          {categories.map((category, index) => (
-            <option key={index} value={category}>
-              {category}
-            </option>
+        {/* SEARCH */}
+        <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg mb-6">
+          <FaSearch className="text-white/70" />
+          <input
+            className="bg-transparent w-full outline-none text-white placeholder-white/60"
+            placeholder="Search complaints..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* STATUS */}
+        <h2 className="text-sm font-bold text-white/70 mb-2">
+          STATUS
+        </h2>
+
+        {["All", "Pending", "Under Review", "Resolved"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`w-full text-left px-4 py-2 rounded-lg mb-2 transition ${
+              statusFilter === s
+                ? "bg-yellow-400 text-black font-bold"
+                : "hover:bg-white/10"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+
+        {/* CATEGORY */}
+        <h2 className="text-sm font-bold text-white/70 mt-6 mb-2">
+          CATEGORIES
+        </h2>
+
+        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+
+          <button
+            onClick={() => setCategoryFilter("All")}
+            className="w-full text-left px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20"
+          >
+            All Categories
+          </button>
+
+          {complaintCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                categoryFilter === cat
+                  ? "bg-pink-500 text-white"
+                  : "hover:bg-white/10"
+              }`}
+            >
+              {cat}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* Complaints Section */}
-      <div className="mt-12 w-full max-w-5xl">
-        <h2 className="text-2xl font-semibold text-gray-800">List of Complaints</h2>
-        <ul className="mt-4 bg-white shadow-lg rounded-lg p-6 divide-y divide-gray-200">
-          {filteredComplaints.length > 0 ? (
-            filteredComplaints.map((complaint, index) => (
-              <li
-                key={index}
-                className="py-3 px-4 bg-gray-50 border border-gray-200 flex justify-between items-center hover:bg-gray-100 transition rounded-md cursor-pointer"
-                onClick={() => openChat(complaint)}
-              >
-                <div className="flex max-md:text-sm justify-center items-center gap-3 capitalize font-semibold">
-                  <div>{complaint.description}</div>
+      {/* MAIN AREA */}
+      <div className="flex-1 p-8">
+
+        {/* HEADER */}
+        <div className="mb-6">
+          <h1 className="text-4xl font-extrabold text-gray-800">
+            Consumer Affairs Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Monitor consumer complaints & fraud reports
+          </p>
+        </div>
+
+        {/* CARDS */}
+        <div className="grid gap-5">
+
+          {filtered.map((c) => (
+            <motion.div
+              key={c.id}
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-lg p-6 border-l-8 border-indigo-500"
+            >
+
+              <div className="flex justify-between">
+
+                {/* LEFT */}
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {c.title}
+                  </h2>
+
+                  <p className="text-gray-500 mt-1">
+                    {c.description}
+                  </p>
+
+                  <div className="mt-3 text-sm text-indigo-600 font-semibold">
+                    {c.category}
+                  </div>
+
+                  <div className="text-sm text-gray-400">
+                    Assigned: {c.assignedTo}
+                  </div>
                 </div>
-                <div className="text-gray-600 text-xs">~👤 {complaint.person}</div>
-              </li>
-            ))
-          ) : (
-            <p className="text-gray-500 text-center py-4">No complaints found.</p>
-          )}
-        </ul>
-      </div>
 
-      {/* Chat Modal */}
-      {isChatOpen && selectedComplaint && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-        >
-          <div className="bg-white bg-opacity-90 w-[95%] md:w-[700px] h-[600px] rounded-lg shadow-2xl flex flex-col">
-            {/* Chat Header */}
-            <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
-              <h2 className="text-xl font-semibold">Consumer Complaint Chat</h2>
-              <FaTimes className="cursor-pointer text-2xl" onClick={closeChat} />
-            </div>
+                {/* RIGHT */}
+                <div className="text-right">
 
-            {/* Chat Body */}
-            <div className="flex-1 p-6 overflow-y-auto bg-gray-100">
-              {/* Product ID */}
-              <div className="mb-3">
-                <label className="block text-lg font-medium">Product ID</label>
-                <input
-                  type="text"
-                  value={selectedComplaint.productid || "N/A"}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
-                  readOnly
-                />
-              </div>
+                  <span
+                    className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(
+                      c.status
+                    )}`}
+                  >
+                    {c.status}
+                  </span>
 
-              {/* Product Name */}
-              <div className="mb-3">
-                <label className="block text-lg font-medium">Product Name</label>
-                <input
-                  type="text"
-                  value={selectedComplaint.productName || "N/A"}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
-                  readOnly
-                />
-              </div>
-
-              {/* Complaint Description */}
-              <div className="mb-3">
-                <label className="block text-lg font-medium">Complaint Description</label>
-                <textarea
-                  value={selectedComplaint.description || "N/A"}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 resize-none"
-                  readOnly
-                  rows={3}
-                />
-              </div>
-
-              {/* Supporting Documents */}
-              <div className="mb-3">
-                <label className="block text-lg font-medium">Supporting Documents</label>
-                {selectedComplaint.documents && selectedComplaint.documents.length > 0 ? (
-                  selectedComplaint.documents.map((doc, index) => (
-                    <div key={index} className="text-blue-600 underline cursor-pointer hover:text-blue-800">
-                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                        Document {index + 1}
-                      </a>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500">No documents attached.</p>
-                )}
-              </div>
-
-              {/* Uploaded Files */}
-              {uploadedFiles.length > 0 && (
-                <div className="mb-3">
-                  <label className="block text-lg font-medium">Uploaded Files</label>
-                  <ul>
-                    {uploadedFiles.map((file, index) => (
-                      <li key={index} className="text-gray-700">{file.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Messages */}
-              <div className="mt-4 p-4 bg-white rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Responses</h3>
-                {selectedComplaint.messages.length > 0 ? (
-                  selectedComplaint.messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`mb-2 p-2 rounded-lg ${
-                        msg.sender === "You" ? "bg-green-200 text-right" : "bg-gray-200 text-left"
-                      }`}
+                  <div className="mt-4">
+                    <select
+                      value={c.status}
+                      onChange={(e) =>
+                        updateStatus(c.id, e.target.value)
+                      }
+                      className="border p-2 rounded-lg text-sm shadow-md"
                     >
-                      <p className="text-gray-800">{msg.text}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center">No messages yet.</p>
-                )}
-              </div>
-            </div>
+                      <option>Pending</option>
+                      <option>Under Review</option>
+                      <option>Resolved</option>
+                    </select>
+                  </div>
 
-            {/* Chat Footer */}
-            <div className="p-4 bg-gray-200 flex items-center gap-2">
-              <input
-                type="text"
-                className="flex-1 p-3 border rounded-lg"
-                placeholder="Type your response..."
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-              />
-              <button
-                className="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition"
-                onClick={sendResponse}
-                disabled={sending}
-              >
-                {sending ? "Sending..." : <FaPaperPlane />}
-              </button>
-              <button
-                className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition"
-                onClick={handleCall}
-              >
-                <FaPhone />
-              </button>
-              <label
-                className="cursor-pointer bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition"
-                title="Attach File"
-              >
-                <FaPaperclip />
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  multiple
-                />
-              </label>
-            </div>
-          </div>
-        </motion.div>
-      )}
+                </div>
+              </div>
+
+            </motion.div>
+          ))}
+
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default MinistryofConsumerAffairs;

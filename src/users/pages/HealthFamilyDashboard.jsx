@@ -30,109 +30,355 @@ function HealthFamilyDashboard() {
     "Lack of Facilities for Disabled Patients",
   ];
 
-  const sampleComplaints = {
-    111: [
-      { description: "Long waiting hours for OPD.", status: "Pending" },
-      { description: "Staff behavior was unprofessional.", status: "Resolved" },
-    ],
-    222: [
-      { description: "High medical charges for basic treatments.", status: "Pending" },
-      { description: "Cleanliness issues in the wards.", status: "Resolved" },
-    ],
-    333: [
-      { description: "Shortage of essential medicines.", status: "Pending" },
-      { description: "Emergency response time was slow.", status: "Resolved" },
-    ],
-  };
+  // Ongoing Complaints
+  const previousComplaints = [
+    {
+      id: 1,
+      hospitalid: "111",
+      hospitalname: "AIIMS Delhi",
+      category: "Hospital & Clinic Negligence",
+      date: "2026-04-10",
+      description:
+        "Doctors were unavailable during emergency hours and patient had to wait for a long time.",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      hospitalid: "333",
+      hospitalname: "Fortis Hospital Mumbai",
+      category: "Sanitation & Hygiene in Public Hospitals",
+      date: "2026-04-21",
+      description:
+        "Washrooms and patient wards were not maintained properly.",
+      status: "Under Review",
+    },
+    {
+      id: 3,
+      hospitalid: "777",
+      hospitalname: "Manipal Hospitals Hyderabad",
+      category: "Medical Test & Lab Report Delays",
+      date: "2026-04-25",
+      description:
+        "MRI reports were delayed for more than 5 days.",
+      status: "Pending",
+    },
+  ];
 
   const [complaint, setComplaint] = useState({
-    hospitalId: "",
-    hospitalName: "",
+    ministry: "67b0a143a3336b7a78621915",
+    hospitalid: "",
+    hospitalname: "",
     category: "",
     date: "",
     description: "",
     document: null,
   });
 
-  const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [selectedFileName, setSelectedFileName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "hospitalId") {
-      const hospitalName = hospitalData[value] || "";
-      setComplaint({ ...complaint, hospitalId: value, hospitalName });
-      setFilteredComplaints(sampleComplaints[value] || []);
+
+    if (name === "hospitalid") {
+      const hospitalname = hospitalData[value] || "";
+
+      setComplaint({
+        ...complaint,
+        hospitalid: value,
+        hospitalname,
+      });
     } else {
-      setComplaint({ ...complaint, [name]: value });
+      setComplaint({
+        ...complaint,
+        [name]: value,
+      });
     }
   };
 
+  // File Upload
   const handleFileChange = (e) => {
-    if (e.target.files.length > 0) {
-      setComplaint({ ...complaint, document: e.target.files[0] });
-      setSelectedFileName(e.target.files[0].name);
-    }
+    setComplaint({
+      ...complaint,
+      document: e.target.files[0],
+    });
   };
 
-  const handleRepostComplaint = (desc) => {
-    setComplaint((prev) => ({ ...prev, description: desc }));
+  // Repost Complaint
+  const handleRepostComplaint = (oldComplaint) => {
+    setComplaint({
+      ...complaint,
+      hospitalid: oldComplaint.hospitalid,
+      hospitalname: oldComplaint.hospitalname,
+      category: oldComplaint.category,
+      date: "",
+      description: oldComplaint.description,
+      document: null,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("hospitalid", complaint.hospitalId);
-      formData.append("hospitalname", complaint.hospitalName);
-      formData.append("category", complaint.category);
-      formData.append("date", complaint.date);
-      formData.append("description", complaint.description);
-      if (complaint.document) {
-        formData.append("document", complaint.document);
-      }
 
-      await axios.post(
+    try {
+      const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofHealthFamilyWelfarepostcomplaint",
-        formData,
-        { withCredentials: true }
+        {
+          ...complaint,
+          document: complaint.document
+            ? complaint.document.name
+            : "imgtoday.jpg",
+        },
+        {
+          withCredentials: true,
+        }
       );
 
+      console.log(response.data);
+
       setSuccessMessage("✅ Complaint Submitted Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setComplaint({
+        ministry: "67b0a143a3336b7a78621915",
+        hospitalid: "",
+        hospitalname: "",
+        category: "",
+        date: "",
+        description: "",
+        document: null,
+      });
     } catch (error) {
       console.error("Error submitting complaint:", error);
-      setSuccessMessage("❌ Failed to submit complaint. Please try again.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "❌ Failed to submit complaint."
+      );
     }
+
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 3000);
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      <h1 className="text-4xl font-extrabold text-blue-800 text-center mt-6">
-        Ministry of Health and Family Dashboard
-      </h1>
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
 
-      <div className="w-full max-w-6xl bg-white p-8 rounded-lg shadow-lg mt-6">
-        {successMessage && <div className="text-center text-green-700">{successMessage}</div>}
+      <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
-        <h2 className="text-xl font-bold">File a New Complaint</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="hospitalId" placeholder="Hospital ID" onChange={handleInputChange} className="w-full p-2 border" />
-          <input type="text" name="hospitalName" value={complaint.hospitalName} readOnly className="w-full p-2 border bg-gray-50" />
-          <select name="category" onChange={handleInputChange} className="w-full p-2 border">
-            <option value="">Select a category</option>
-            {categories.map((category, index) => (
-              <option key={index} value={category}>{category}</option>
+      {/* Main Container */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4">
+        <motion.h1
+          className="text-2xl font-bold text-gray-800 text-center mb-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          Ministry of Health and Family Dashboard
+        </motion.h1>
+
+        {/* Complaint Form */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {(successMessage || errorMessage) && (
+            <motion.div
+              className={`mb-3 p-2 rounded-lg text-center ${
+                successMessage
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {successMessage || errorMessage}
+            </motion.div>
+          )}
+
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">
+            File a New Complaint
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Hospital ID & Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Hospital ID
+                </label>
+
+                <input
+                  type="text"
+                  name="hospitalid"
+                  value={complaint.hospitalid}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter Hospital ID"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Hospital Name
+                </label>
+
+                <input
+                  type="text"
+                  name="hospitalname"
+                  value={complaint.hospitalname}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  placeholder="Hospital Name"
+                />
+              </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Complaint Category
+              </label>
+
+              <select
+                name="category"
+                value={complaint.category}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select a category</option>
+
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Date
+              </label>
+
+              <input
+                type="date"
+                name="date"
+                value={complaint.date}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Complaint Description
+              </label>
+
+              <textarea
+                name="description"
+                value={complaint.description}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                rows="3"
+                placeholder="Describe your complaint"
+              />
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Supporting Document
+              </label>
+
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+
+              {complaint.document && (
+                <p className="text-sm text-green-700 mt-1">
+                  Selected File: {complaint.document.name}
+                </p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Submit Complaint
+            </button>
+          </form>
+        </motion.div>
+
+        {/* Ongoing Public Complaints */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Ongoing Public Complaints
+          </h2>
+
+          <div className="space-y-4">
+            {previousComplaints.map((item) => (
+              <motion.div
+                key={item.id}
+                className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-700">
+                      {item.hospitalname}
+                    </h3>
+
+                    <p className="text-sm text-gray-600">
+                      Hospital ID: {item.hospitalid}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Category: {item.category}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Date: {item.date}
+                    </p>
+
+                    <p className="text-sm font-medium mt-1 text-red-600">
+                      Status: {item.status}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleRepostComplaint(item)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    Repost Complaint
+                  </button>
+                </div>
+
+                <p className="mt-3 text-gray-700">
+                  {item.description}
+                </p>
+              </motion.div>
             ))}
-          </select>
-          <input type="date" name="date" onChange={handleInputChange} className="w-full p-2 border" />
-          <textarea name="description" placeholder="Describe your complaint" onChange={handleInputChange} className="w-full p-2 border"></textarea>
-          <input type="file" onChange={handleFileChange} className="w-full p-2 border" />
-          {selectedFileName && <p className="text-sm">Selected file: {selectedFileName}</p>}
-          <button type="submit" className="bg-blue-600 text-white p-2 rounded">Submit Complaint</button>
-        </form>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

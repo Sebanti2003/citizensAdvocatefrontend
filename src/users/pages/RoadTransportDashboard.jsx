@@ -29,23 +29,42 @@ function RoadTransportDashboard() {
     "Corruption & Bribery in Transport Department",
   ];
 
-  const sampleComplaints = {
-    101: [
-      { description: "Bus did not arrive on time.", status: "Pending" },
-      { description: "Driver was rude to passengers.", status: "Resolved" },
-    ],
-    202: [
-      { description: "Escalator was not working.", status: "Pending" },
-      { description: "Ticket machine was out of order.", status: "Resolved" },
-    ],
-    303: [
-      { description: "Overcrowding in peak hours.", status: "Pending" },
-      { description: "Broken seats in the bus.", status: "Resolved" },
-    ],
-  };
+  // Only ongoing complaints
+  const previousComplaints = [
+    {
+      id: 1,
+      transportservicenumber: "101",
+      transportservicename: "Kolkata City Bus Service",
+      category: "Public Transport Service Issues",
+      date: "2026-04-10",
+      description:
+        "Bus service is extremely delayed during office hours.",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      transportservicenumber: "505",
+      transportservicename: "Bangalore BMTC",
+      category: "Road & Highway Conditions (Potholes, Damage)",
+      date: "2026-04-22",
+      description:
+        "Major potholes causing traffic jams and accidents.",
+      status: "Pending",
+    },
+    {
+      id: 3,
+      transportservicenumber: "303",
+      transportservicename: "Delhi Public Transport",
+      category: "Traffic Congestion & Management",
+      date: "2026-04-28",
+      description:
+        "Extreme overcrowding and lack of buses during peak office hours.",
+      status: "Under Review",
+    },
+  ];
 
   const [complaint, setComplaint] = useState({
-    ministry: "67b0a135a3336b7a78621913", // fixed ministry ID
+    ministry: "67b0a135a3336b7a78621913",
     transportservicenumber: "",
     transportservicename: "",
     category: "",
@@ -53,26 +72,48 @@ function RoadTransportDashboard() {
     description: "",
   });
 
-  const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     if (name === "transportservicenumber") {
       const transportservicename = transportData[value] || "";
-      setComplaint({ ...complaint, transportservicenumber: value, transportservicename });
-      setFilteredComplaints(sampleComplaints[value] || []);
+
+      setComplaint({
+        ...complaint,
+        transportservicenumber: value,
+        transportservicename,
+      });
     } else {
-      setComplaint({ ...complaint, [name]: value });
+      setComplaint({
+        ...complaint,
+        [name]: value,
+      });
     }
   };
 
-  const handleRepostComplaint = (desc) => {
-    setComplaint((prev) => ({ ...prev, description: desc }));
+  // Repost complaint
+  const handleRepostComplaint = (oldComplaint) => {
+    setComplaint({
+      ...complaint,
+      transportservicenumber: oldComplaint.transportservicenumber,
+      transportservicename: oldComplaint.transportservicename,
+      category: oldComplaint.category,
+      date: "",
+      description: oldComplaint.description,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofroadtransportandhighwayspostcomplaint",
@@ -80,164 +121,227 @@ function RoadTransportDashboard() {
           ...complaint,
           document: "picimg",
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
+
       console.log(response.data);
+
       setSuccessMessage("✅ Complaint Submitted Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setComplaint({
+        ministry: "67b0a135a3336b7a78621913",
+        transportservicenumber: "",
+        transportservicename: "",
+        category: "",
+        date: "",
+        description: "",
+      });
     } catch (error) {
       console.error("Error submitting complaint:", error);
+
+      setErrorMessage("❌ Failed to submit complaint.");
     }
+
+    setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 3000);
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background design matching Consumer Affairs Dashboard */}
+      {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
+
       <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
-      {/* Main content container */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-6">
+      {/* Main Container */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4">
         <motion.h1
-          className="text-2xl md:text-4xl font-extrabold text-blue-800 text-center mt-6"
+          className="text-2xl font-bold text-gray-800 text-center mb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
         >
           Ministry of Road Transport Dashboard
         </motion.h1>
 
+        {/* Complaint Form */}
         <motion.div
-          className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 md:p-8 flex flex-col gap-4 md:gap-6 mt-6"
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
         >
-          {successMessage && (
+          {(successMessage || errorMessage) && (
             <motion.div
-              className="w-full text-center text-base md:text-lg font-semibold text-green-700 bg-green-100 py-2 rounded-lg"
+              className={`mb-3 p-2 rounded-lg text-center ${
+                successMessage
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
             >
-              {successMessage}
+              {successMessage || errorMessage}
             </motion.div>
           )}
 
-          <h2 className="text-lg md:text-xl font-bold text-gray-800">
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">
             File a New Complaint
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div>
-              <label className="block text-base md:text-lg font-medium">
-                Transport Service Number
-              </label>
-              <input
-                type="text"
-                name="transportservicenumber"
-                value={complaint.transportservicenumber}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                placeholder="Enter Service Number"
-              />
-            </div>
-            <div>
-              <label className="block text-base md:text-lg font-medium">
-                Transport Service Name
-              </label>
-              <input
-                type="text"
-                name="transportservicename"
-                value={complaint.transportservicename}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                placeholder="Service Name"
-              />
-            </div>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Service Number & Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Transport Service Number
+                </label>
 
-          {filteredComplaints.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md w-full">
-              <h3 className="text-base md:text-lg font-bold mb-4">
-                Existing Complaints for {complaint.transportservicename}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredComplaints.map((comp, index) => (
-                  <motion.div
-                    key={index}
-                    className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col gap-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <p className="font-semibold text-sm">{comp.description}</p>
-                    <p className={`text-sm ${comp.status === "Resolved" ? "text-green-600" : "text-red-600"}`}>
-                      Status: {comp.status}
-                    </p>
-                    <button
-                      onClick={() => handleRepostComplaint(comp.description)}
-                      className="mt-2 py-1 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                    >
-                      Repost the Same Complaint
-                    </button>
-                  </motion.div>
-                ))}
+                <input
+                  type="text"
+                  name="transportservicenumber"
+                  value={complaint.transportservicenumber}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter Service Number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Transport Service Name
+                </label>
+
+                <input
+                  type="text"
+                  name="transportservicename"
+                  value={complaint.transportservicename}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg bg-gray-50"
+                  placeholder="Service Name"
+                />
               </div>
             </div>
-          )}
 
-          <div className="mt-4">
-            <label className="block text-base md:text-lg font-medium">
-              Select Complaint Category
-            </label>
-            <select
-              name="category"
-              value={complaint.category}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Complaint Category
+              </label>
+
+              <select
+                name="category"
+                value={complaint.category}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select a category</option>
+
+                {complaintCategories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Date
+              </label>
+
+              <input
+                type="date"
+                name="date"
+                value={complaint.date}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Complaint Description
+              </label>
+
+              <textarea
+                name="description"
+                value={complaint.description}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                rows="3"
+                placeholder="Describe your complaint"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
             >
-              <option value="">Select a category</option>
-              {complaintCategories.map((category, index) => (
-                <option key={index} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
+              Submit Complaint
+            </button>
+          </form>
+        </motion.div>
 
-          <div className="mt-4">
-            <label className="block text-base md:text-lg font-medium">
-              Choose Date
-            </label>
-            <input
-              type="date"
-              name="date"
-              value={complaint.date}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-            />
-          </div>
+        {/* Ongoing Public Complaints */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Ongoing Public Complaints
+          </h2>
 
-          <div className="mt-6">
-            <label className="block text-base md:text-lg font-medium">
-              Complaint Description
-            </label>
-            <textarea
-              name="description"
-              value={complaint.description}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Describe your complaint"
-              rows="3"
-            />
-          </div>
+          <div className="space-y-4">
+            {previousComplaints.map((item) => (
+              <motion.div
+                key={item.id}
+                className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-700">
+                      {item.transportservicename}
+                    </h3>
 
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition mt-4"
-          >
-            Submit Complaint
-          </button>
+                    <p className="text-sm text-gray-600">
+                      Service Number: {item.transportservicenumber}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Category: {item.category}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Date: {item.date}
+                    </p>
+
+                    <p className="text-sm font-medium mt-1 text-red-600">
+                      Status: {item.status}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleRepostComplaint(item)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    Repost Complaint
+                  </button>
+                </div>
+
+                <p className="mt-3 text-gray-700">
+                  {item.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </div>

@@ -31,6 +31,32 @@ function RailwaysDashboard() {
     "TTE & Railway Staff Misconduct",
   ];
 
+  // Only Pending Complaints
+  const previousComplaints = [
+    {
+      id: 1,
+      trainNumber: "222",
+      trainName: "Howrah-Puri Rajdhani Express",
+      pnr: "8456123789",
+      category: "Train Delay & Rescheduling",
+      date: "2026-04-10",
+      description:
+        "Train was delayed by more than 5 hours without any prior notification.",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      trainNumber: "888",
+      trainName: "Hyderabad-Chennai Charminar Express",
+      pnr: "9345612780",
+      category: "Coach & Seat Allocation Issues",
+      date: "2026-04-22",
+      description:
+        "Seat allotted was already occupied by another passenger.",
+      status: "Pending",
+    },
+  ];
+
   const [complaint, setComplaint] = useState({
     trainNumber: "",
     trainName: "",
@@ -46,20 +72,48 @@ function RailwaysDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // For trainNumber, simply update the value without auto-populating trainName
+
     if (name === "trainNumber") {
-      setComplaint({ ...complaint, trainNumber: value });
+      setComplaint({
+        ...complaint,
+        trainNumber: value,
+      });
     } else {
-      setComplaint({ ...complaint, [name]: value });
+      setComplaint({
+        ...complaint,
+        [name]: value,
+      });
     }
   };
 
   const handleFileChange = (e) => {
-    setComplaint({ ...complaint, document: e.target.files[0] });
+    setComplaint({
+      ...complaint,
+      document: e.target.files[0],
+    });
+  };
+
+  // Repost Complaint
+  const handleRepostComplaint = (oldComplaint) => {
+    setComplaint({
+      trainNumber: oldComplaint.trainNumber,
+      trainName: oldComplaint.trainName,
+      pnr: oldComplaint.pnr,
+      category: oldComplaint.category,
+      date: "",
+      description: oldComplaint.description,
+      document: null,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofrailwaypostcomplaint",
@@ -76,9 +130,12 @@ function RailwaysDashboard() {
           withCredentials: true,
         }
       );
+
       const data = response.data;
+
       if (data) {
         setSuccessMessage("✅ Complaint Submitted Successfully!");
+
         setComplaint({
           trainNumber: "",
           trainName: "",
@@ -94,6 +151,7 @@ function RailwaysDashboard() {
     } catch (error) {
       setErrorMessage(error.message);
     }
+
     setTimeout(() => {
       setSuccessMessage("");
       setErrorMessage("");
@@ -102,13 +160,14 @@ function RailwaysDashboard() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background design matching Consumer Affairs Dashboard */}
+      {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
+
       <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
-      {/* Main content */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-4">
-        <motion.h1 
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4">
+        <motion.h1
           className="text-2xl font-bold text-gray-800 text-center mb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -116,15 +175,18 @@ function RailwaysDashboard() {
           Ministry of Railways Dashboard
         </motion.h1>
 
+        {/* Complaint Form */}
         <motion.div
-          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           {(successMessage || errorMessage) && (
             <motion.div
               className={`mb-3 p-2 rounded-lg text-center ${
-                successMessage ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                successMessage
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
               }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -133,12 +195,18 @@ function RailwaysDashboard() {
             </motion.div>
           )}
 
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">File a New Complaint</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">
+            File a New Complaint
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Train Number */}
               <div>
-                <label className="block text-sm font-medium mb-1">Train Number</label>
+                <label className="block text-sm font-medium mb-1">
+                  Train Number
+                </label>
+
                 <input
                   type="text"
                   name="trainNumber"
@@ -148,8 +216,13 @@ function RailwaysDashboard() {
                   placeholder="Enter Train Number"
                 />
               </div>
+
+              {/* Train Name */}
               <div>
-                <label className="block text-sm font-medium mb-1">Train Name</label>
+                <label className="block text-sm font-medium mb-1">
+                  Train Name
+                </label>
+
                 <input
                   type="text"
                   name="trainName"
@@ -161,8 +234,12 @@ function RailwaysDashboard() {
               </div>
             </div>
 
+            {/* PNR Number */}
             <div>
-              <label className="block text-sm font-medium mb-1">PNR Number</label>
+              <label className="block text-sm font-medium mb-1">
+                PNR Number
+              </label>
+
               <input
                 type="text"
                 name="pnr"
@@ -173,8 +250,12 @@ function RailwaysDashboard() {
               />
             </div>
 
+            {/* Category */}
             <div>
-              <label className="block text-sm font-medium mb-1">Category</label>
+              <label className="block text-sm font-medium mb-1">
+                Category
+              </label>
+
               <select
                 name="category"
                 value={complaint.category}
@@ -182,6 +263,7 @@ function RailwaysDashboard() {
                 className="w-full p-2 border border-gray-300 rounded-lg"
               >
                 <option value="">Select a category</option>
+
                 {complaintCategories.map((category, index) => (
                   <option key={index} value={category}>
                     {category}
@@ -190,8 +272,12 @@ function RailwaysDashboard() {
               </select>
             </div>
 
+            {/* Date */}
             <div>
-              <label className="block text-sm font-medium mb-1">Date</label>
+              <label className="block text-sm font-medium mb-1">
+                Date
+              </label>
+
               <input
                 type="date"
                 name="date"
@@ -201,8 +287,12 @@ function RailwaysDashboard() {
               />
             </div>
 
+            {/* Description */}
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label className="block text-sm font-medium mb-1">
+                Description
+              </label>
+
               <textarea
                 name="description"
                 value={complaint.description}
@@ -213,8 +303,12 @@ function RailwaysDashboard() {
               />
             </div>
 
+            {/* Supporting Document */}
             <div>
-              <label className="block text-sm font-medium mb-1">Supporting Document</label>
+              <label className="block text-sm font-medium mb-1">
+                Supporting Document
+              </label>
+
               <input
                 type="file"
                 onChange={handleFileChange}
@@ -222,6 +316,7 @@ function RailwaysDashboard() {
               />
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -229,6 +324,66 @@ function RailwaysDashboard() {
               Submit Complaint
             </button>
           </form>
+        </motion.div>
+
+        {/* Previous Complaints */}
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Similar Pending Complaints
+          </h2>
+
+          <div className="space-y-4">
+            {previousComplaints.map((item) => (
+              <motion.div
+                key={item.id}
+                className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-700">
+                      {item.trainName}
+                    </h3>
+
+                    <p className="text-sm text-gray-600">
+                      Train Number: {item.trainNumber}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      PNR: {item.pnr}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Category: {item.category}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      Date: {item.date}
+                    </p>
+
+                    <p className="text-sm font-medium mt-1 text-red-600">
+                      Status: {item.status}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleRepostComplaint(item)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    Repost Complaint
+                  </button>
+                </div>
+
+                <p className="mt-3 text-gray-700">
+                  {item.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </div>
