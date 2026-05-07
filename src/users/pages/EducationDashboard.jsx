@@ -69,7 +69,8 @@ function EducationDashboard() {
     category: "",
     date: "",
     description: "",
-    document: null,
+    idProof: null,
+    supportingDocuments: null,
   });
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -94,6 +95,15 @@ function EducationDashboard() {
     }
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+
+    setComplaint({
+      ...complaint,
+      [name]: files[0],
+    });
+  };
+
   // Repost Complaint
   const handleRepostComplaint = (oldComplaint) => {
     setComplaint({
@@ -102,7 +112,8 @@ function EducationDashboard() {
       category: oldComplaint.category,
       date: "",
       description: oldComplaint.description,
-      document: null,
+      idProof: null,
+      supportingDocuments: null,
     });
 
     window.scrollTo({
@@ -123,7 +134,7 @@ function EducationDashboard() {
           category: complaint.category,
           date: complaint.date,
           description: complaint.description,
-          document: complaint.document || "img",
+          document: "img",
         },
         {
           withCredentials: true,
@@ -141,7 +152,8 @@ function EducationDashboard() {
           category: "",
           date: "",
           description: "",
-          document: null,
+          idProof: null,
+          supportingDocuments: null,
         });
       } else {
         setErrorMessage("❌ Failed to submit complaint.");
@@ -283,6 +295,32 @@ function EducationDashboard() {
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 rows="3"
                 placeholder="Describe your complaint"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                ID Proof
+              </label>
+
+              <input
+                type="file"
+                name="idProof"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Supporting Documents for Grievance
+              </label>
+
+              <input
+                type="file"
+                name="supportingDocuments"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
               />
             </div>
 

@@ -2,11 +2,31 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+).replace(/\/+$/, '');
+
+const getAxiosErrorMessage = (error) => {
+  if (error?.response?.status === 503) {
+    return 'Backend service is currently unavailable (503). Please wait a moment and try again.';
+  }
+
+  if (error?.response?.status === 401) {
+    return error.response?.data?.message || 'Invalid department ID or password.';
+  }
+
+  if (error?.code === 'ERR_NETWORK') {
+    return 'Cannot reach local backend. Make sure server is running at http://localhost:3000.';
+  }
+
+  return error?.response?.data?.message || 'Something went wrong. Please try again.';
+};
+
 function GovtLogin() {
   const [departmentalid, setDepartmentId] = useState('');
   const [password, setCreateDepartmentPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [redirectToSignUp, setRedirectToSignUp] = useState(false);
 
@@ -15,20 +35,18 @@ function GovtLogin() {
     const me = async () => {
       try {
         const response = await axios.get(
-          `https://citiadvo.onrender.com/api/v1/ministry/me`,
+          `${BACKEND_URL}/api/v1/ministry/me`,
           { withCredentials: true }
         );
         console.log(response.data);
       } catch (err) {
-        console.error("Error fetching complaints:", err);
+        console.error('Error checking ministry session:', err);
       } finally {
         setLoading(false);
       }
     };
     me();
-  }, [
-    navigate,
-  ]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,8 +54,8 @@ function GovtLogin() {
     setError('');
 
     try {
-      console.log('Backend URL:', import.meta.env.VITE_BACKEND_URL);
-      const response = await axios.post(`https://citiadvo.onrender.com/api/v1/ministry/auth/login`, {
+      console.log('Backend URL:', BACKEND_URL);
+      const response = await axios.post(`${BACKEND_URL}/api/v1/ministry/auth/login`, {
         departmentalid,
         password
       }, {
@@ -49,9 +67,9 @@ function GovtLogin() {
 
       const departmentRoutes = {
         "RAIL001": "MinistryofRailways",
-        "CONSUMER002": "MinistryofConsumerAffairsFoodandPublicDistribution",
+        "CONSUMER002": "MinistryofConsumerAffairs",
         "WOMEN004": "MinistryofWomenandChildDevelopment",
-        "EDU003": "MinistryofHomeAffairs",
+        "EDU003": "MinistryofEducation",
         "ROAD005": "MinistryofRoadTransportandHighways",
         "HEALTH006": "MinistryofHealthandFamilyWelfare",
       };
@@ -64,7 +82,7 @@ function GovtLogin() {
       setCreateDepartmentPassword('');
     } catch (error) {
       console.error(error);
-      setError(error.response?.data?.message || 'Error logging in');
+      setError(getAxiosErrorMessage(error));
     } finally {
       setLoading(false);
     }

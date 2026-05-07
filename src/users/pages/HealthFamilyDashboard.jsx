@@ -71,7 +71,8 @@ function HealthFamilyDashboard() {
     category: "",
     date: "",
     description: "",
-    document: null,
+    idProof: null,
+    supportingDocuments: null,
   });
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -98,9 +99,11 @@ function HealthFamilyDashboard() {
 
   // File Upload
   const handleFileChange = (e) => {
+    const { name, files } = e.target;
+
     setComplaint({
       ...complaint,
-      document: e.target.files[0],
+      [name]: files[0],
     });
   };
 
@@ -113,7 +116,8 @@ function HealthFamilyDashboard() {
       category: oldComplaint.category,
       date: "",
       description: oldComplaint.description,
-      document: null,
+      idProof: null,
+      supportingDocuments: null,
     });
 
     window.scrollTo({
@@ -130,9 +134,7 @@ function HealthFamilyDashboard() {
         "http://localhost:3000/api/v1/complaints/ministryofHealthFamilyWelfarepostcomplaint",
         {
           ...complaint,
-          document: complaint.document
-            ? complaint.document.name
-            : "imgtoday.jpg",
+          document: "imgtoday.jpg",
         },
         {
           withCredentials: true,
@@ -150,7 +152,8 @@ function HealthFamilyDashboard() {
         category: "",
         date: "",
         description: "",
-        document: null,
+        idProof: null,
+        supportingDocuments: null,
       });
     } catch (error) {
       console.error("Error submitting complaint:", error);
@@ -295,21 +298,36 @@ function HealthFamilyDashboard() {
               />
             </div>
 
-            {/* File Upload */}
+            {/* ID Proof */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Supporting Document
+                ID Proof
               </label>
 
               <input
                 type="file"
+                name="idProof"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Supporting Documents for Grievance */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Supporting Documents for Grievance
+              </label>
+
+              <input
+                type="file"
+                name="supportingDocuments"
                 onChange={handleFileChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
               />
 
-              {complaint.document && (
+              {complaint.supportingDocuments && (
                 <p className="text-sm text-green-700 mt-1">
-                  Selected File: {complaint.document.name}
+                  Selected File: {complaint.supportingDocuments.name}
                 </p>
               )}
             </div>

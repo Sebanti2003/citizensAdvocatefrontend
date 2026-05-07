@@ -24,12 +24,28 @@ function UserLogin() {
       const response = await axios.post('http://localhost:3000/api/v1/user/auth/login', {
         email,
         password,
-      },{
+      }, {
         withCredentials: true
       });
-
       console.log('Login successful:', response.data);
-      navigate('/user/citizendashboard'); // ✅ Redirecting to dashboard after successful login
+
+      const loggedInUser =
+        response?.data?.user ||
+        response?.data?.data?.user ||
+        response?.data?.data ||
+        {};
+
+      const displayName =
+        loggedInUser?.username ||
+        loggedInUser?.name ||
+        loggedInUser?.fullName ||
+        "";
+
+      if (displayName) {
+        localStorage.setItem("citizenUsername", displayName);
+      }
+
+      navigate('/user/citizendashboard'); // Redirecting to dashboard after successful login
     } catch (error) {
       console.error('Login failed:', error.response?.data?.message);
       setError(error.response?.data?.message || 'Invalid credentials ❌');
@@ -82,3 +98,4 @@ function UserLogin() {
 }
 
 export default UserLogin;
+

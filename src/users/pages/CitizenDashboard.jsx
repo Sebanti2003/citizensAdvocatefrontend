@@ -16,6 +16,8 @@ import { useNavigate } from "react-router-dom";
 
 function CitizenDashboard() {
   const navigate = useNavigate();
+  const citizenUsername =
+    localStorage.getItem("citizenUsername") || "Registered Citizen";
 
   const [selectedMinistry, setSelectedMinistry] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -109,6 +111,7 @@ function CitizenDashboard() {
         }
       );
 
+      localStorage.removeItem("citizenUsername");
       navigate("/user/login");
     } catch (error) {
       console.log(error);
@@ -152,7 +155,7 @@ function CitizenDashboard() {
             </div>
 
             <h2 className="mt-4 text-2xl font-bold">
-              Samiksha Bharti
+              {citizenUsername}
             </h2>
 
             <p className="text-gray-300 text-sm mt-1">
