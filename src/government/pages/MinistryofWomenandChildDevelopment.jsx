@@ -1,11 +1,22 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FaSearch, FaFemale } from "react-icons/fa";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import {
+  getAllComplaints,
+  transferComplaintsToMinistry,
+  updateComplaintStatus,
+} from "../../utils/complaintsStorage";
 
 function MinistryofWomenChildDevelopment() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [isTransferMode, setIsTransferMode] = useState(false);
+  const [selectedTransferComplaintIds, setSelectedTransferComplaintIds] = useState([]);
+  const [targetMinistry, setTargetMinistry] = useState("");
 
   const complaintCategories = [
     "Domestic Violence & Abuse Complaints",
@@ -20,37 +31,28 @@ function MinistryofWomenChildDevelopment() {
     "Women's Shelter & Rehabilitation Complaints",
   ];
 
-  const [complaints, setComplaints] = useState([
-    {
-      id: 1,
-      title: "Domestic abuse complaint",
-      description: "Severe domestic violence reported by victim.",
-      status: "Pending",
-      category: "Domestic Violence & Abuse Complaints",
-      assignedTo: "Unassigned",
-    },
-    {
-      id: 2,
-      title: "Workplace harassment case",
-      description: "Harassment reported at private company office.",
-      status: "Under Review",
-      category: "Sexual Harassment & Workplace Safety",
-      assignedTo: "Priya Sharma",
-    },
-    {
-      id: 3,
-      title: "Child nutrition issue",
-      description: "Malnutrition reported in rural anganwadi center.",
-      status: "Resolved",
-      category: "Malnutrition & Welfare Program Complaints",
-      assignedTo: "Anjali Verma",
-    },
-  ]);
+  const [complaints, setComplaints] = useState([]);
+  const transferMinistryOptions = [
+    "Railways",
+    "Education",
+    "Health & Family Welfare",
+    "Road Transport",
+    "Consumer Affairs",
+  ];
+
+  useEffect(() => {
+    const womenChildComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Women & Child Development"
+    );
+    setComplaints(womenChildComplaints);
+  }, []);
 
   const updateStatus = (id, newStatus) => {
-    setComplaints((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+    updateComplaintStatus(id, newStatus);
+    const womenChildComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Women & Child Development"
     );
+    setComplaints(womenChildComplaints);
   };
 
   const filtered = useMemo(() => {
@@ -75,6 +77,36 @@ function MinistryofWomenChildDevelopment() {
     if (status === "Under Review")
       return "bg-pink-500 text-white shadow-pink-200";
     return "bg-purple-500 text-white shadow-purple-200";
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.get("http://localhost:3000/api/v1/ministry/auth/logout", {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      navigate("/govt/login");
+    }
+  };
+
+  const handleTransferComplaint = () => {
+    if (!selectedTransferComplaintIds.length || !targetMinistry) return;
+    transferComplaintsToMinistry(selectedTransferComplaintIds, targetMinistry);
+    const womenChildComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Women & Child Development"
+    );
+    setComplaints(womenChildComplaints);
+    setIsTransferMode(false);
+    setSelectedTransferComplaintIds([]);
+    setTargetMinistry("");
+  };
+
+  const toggleTransferSelection = (complaintId, checked) => {
+    setSelectedTransferComplaintIds((prev) =>
+      checked ? [...prev, complaintId] : prev.filter((id) => id !== complaintId)
+    );
   };
 
   return (
@@ -126,7 +158,7 @@ function MinistryofWomenChildDevelopment() {
           CATEGORIES
         </h2>
 
-        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+        <div className="space-y-2 pr-1">
           <button
             onClick={() => setCategoryFilter("All")}
             className="w-full text-left px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20"
@@ -155,9 +187,56 @@ function MinistryofWomenChildDevelopment() {
 
         {/* HEADER */}
         <div className="mb-6">
-          <h1 className="text-4xl font-extrabold text-gray-800">
-            Women & Child Development Dashboard
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl font-extrabold text-gray-800">
+              Women & Child Development Dashboard
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (isTransferMode) {
+                    setIsTransferMode(false);
+                    setSelectedTransferComplaintIds([]);
+                    setTargetMinistry("");
+                    return;
+                  }
+                  setIsTransferMode(true);
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                {isTransferMode ? "Cancel Transfer" : "Transfer Complaints"}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+          {isTransferMode && (
+            <div className="mt-3 flex items-center gap-2">
+              <select
+                value={targetMinistry}
+                onChange={(e) => setTargetMinistry(e.target.value)}
+                className="border border-amber-500 text-amber-700 bg-amber-50 rounded-lg px-3 py-2"
+              >
+                <option value="">Select target ministry</option>
+                {transferMinistryOptions.map((ministry) => (
+                  <option key={ministry} value={ministry}>
+                    {ministry}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleTransferComplaint}
+                disabled={!selectedTransferComplaintIds.length || !targetMinistry}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition disabled:opacity-60"
+              >
+                Transfer Selected ({selectedTransferComplaintIds.length})
+              </button>
+            </div>
+          )}
           <p className="text-gray-600">
             Monitor welfare, safety & protection complaints
           </p>
@@ -188,12 +267,24 @@ function MinistryofWomenChildDevelopment() {
                   </div>
 
                   <div className="text-sm text-gray-400">
-                    Assigned: {c.assignedTo}
+                    Assigned: {c.assignedTo || "-"}
                   </div>
                 </div>
 
                 {/* RIGHT */}
                 <div className="text-right">
+                  {isTransferMode && (
+                    <div className="mb-3 flex justify-end">
+                      <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={selectedTransferComplaintIds.includes(c.id)}
+                          onChange={(e) => toggleTransferSelection(c.id, e.target.checked)}
+                        />
+                        Select
+                      </label>
+                    </div>
+                  )}
 
                   <span
                     className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(
@@ -222,6 +313,7 @@ function MinistryofWomenChildDevelopment() {
           ))}
         </div>
       </div>
+
     </div>
   );
 }

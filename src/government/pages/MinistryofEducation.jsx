@@ -1,11 +1,22 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FaSearch, FaGraduationCap } from "react-icons/fa";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import {
+  getAllComplaints,
+  transferComplaintsToMinistry,
+  updateComplaintStatus,
+} from "../../utils/complaintsStorage";
 
 function MinistryofEducation() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [isTransferMode, setIsTransferMode] = useState(false);
+  const [selectedTransferComplaintIds, setSelectedTransferComplaintIds] = useState([]);
+  const [targetMinistry, setTargetMinistry] = useState("");
 
   const complaintCategories = [
     "Admission Issues",
@@ -21,37 +32,28 @@ function MinistryofEducation() {
     "Delay in Degree/Certificate Issuance",
   ];
 
-  const [complaints, setComplaints] = useState([
-    {
-      id: 1,
-      title: "Delay in exam results",
-      description: "Final semester results not declared on time.",
-      status: "Pending",
-      category: "Exam & Result Issues",
-      assignedTo: "Unassigned",
-    },
-    {
-      id: 2,
-      title: "Scholarship not received",
-      description: "Post-matric scholarship pending for months.",
-      status: "Under Review",
-      category: "Scholarship & Financial Aid",
-      assignedTo: "Dr. Sharma",
-    },
-    {
-      id: 3,
-      title: "Poor classroom infrastructure",
-      description: "Broken benches and non-functional projectors.",
-      status: "Resolved",
-      category: "Infrastructure & Facilities (Classrooms, Labs, Hostels)",
-      assignedTo: "Admin Office",
-    },
-  ]);
+  const [complaints, setComplaints] = useState([]);
+  const transferMinistryOptions = [
+    "Railways",
+    "Health & Family Welfare",
+    "Road Transport",
+    "Women & Child Development",
+    "Consumer Affairs",
+  ];
+
+  useEffect(() => {
+    const educationComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Education"
+    );
+    setComplaints(educationComplaints);
+  }, []);
 
   const updateStatus = (id, newStatus) => {
-    setComplaints((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+    updateComplaintStatus(id, newStatus);
+    const educationComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Education"
     );
+    setComplaints(educationComplaints);
   };
 
   const filtered = useMemo(() => {
@@ -76,6 +78,36 @@ function MinistryofEducation() {
     if (status === "Under Review")
       return "bg-yellow-500 text-white shadow-yellow-200";
     return "bg-red-500 text-white shadow-red-200";
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.get("http://localhost:3000/api/v1/ministry/auth/logout", {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      navigate("/govt/login");
+    }
+  };
+
+  const handleTransferComplaint = () => {
+    if (!selectedTransferComplaintIds.length || !targetMinistry) return;
+    transferComplaintsToMinistry(selectedTransferComplaintIds, targetMinistry);
+    const educationComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Education"
+    );
+    setComplaints(educationComplaints);
+    setSelectedTransferComplaintIds([]);
+    setTargetMinistry("");
+    setIsTransferMode(false);
+  };
+
+  const toggleTransferSelection = (complaintId, checked) => {
+    setSelectedTransferComplaintIds((prev) =>
+      checked ? [...prev, complaintId] : prev.filter((id) => id !== complaintId)
+    );
   };
 
   return (
@@ -127,7 +159,7 @@ function MinistryofEducation() {
           CATEGORIES
         </h2>
 
-        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+        <div className="space-y-2 pr-1">
           <button
             onClick={() => setCategoryFilter("All")}
             className="w-full text-left px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20"
@@ -156,9 +188,56 @@ function MinistryofEducation() {
 
         {/* HEADER */}
         <div className="mb-6">
-          <h1 className="text-4xl font-extrabold text-gray-800">
-            Education Governance Dashboard
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl font-extrabold text-gray-800">
+              Education Governance Dashboard
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (isTransferMode) {
+                    setIsTransferMode(false);
+                    setSelectedTransferComplaintIds([]);
+                    setTargetMinistry("");
+                    return;
+                  }
+                  setIsTransferMode(true);
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                {isTransferMode ? "Cancel Transfer" : "Transfer Complaints"}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+          {isTransferMode && (
+            <div className="mt-3 flex items-center gap-2">
+              <select
+                value={targetMinistry}
+                onChange={(e) => setTargetMinistry(e.target.value)}
+                className="border border-amber-500 text-amber-700 bg-amber-50 rounded-lg px-3 py-2"
+              >
+                <option value="">Select target ministry</option>
+                {transferMinistryOptions.map((ministry) => (
+                  <option key={ministry} value={ministry}>
+                    {ministry}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleTransferComplaint}
+                disabled={!selectedTransferComplaintIds.length || !targetMinistry}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition disabled:opacity-60"
+              >
+                Transfer Selected ({selectedTransferComplaintIds.length})
+              </button>
+            </div>
+          )}
           <p className="text-gray-600">
             Monitor student complaints & institutional issues
           </p>
@@ -189,12 +268,24 @@ function MinistryofEducation() {
                   </div>
 
                   <div className="text-sm text-gray-400">
-                    Assigned: {c.assignedTo}
+                    Assigned: {c.assignedTo || "-"}
                   </div>
                 </div>
 
                 {/* RIGHT */}
                 <div className="text-right">
+                  {isTransferMode && (
+                    <div className="mb-3 flex justify-end">
+                      <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={selectedTransferComplaintIds.includes(c.id)}
+                          onChange={(e) => toggleTransferSelection(c.id, e.target.checked)}
+                        />
+                        Select
+                      </label>
+                    </div>
+                  )}
 
                   <span
                     className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(
@@ -224,6 +315,7 @@ function MinistryofEducation() {
           ))}
         </div>
       </div>
+
     </div>
   );
 }

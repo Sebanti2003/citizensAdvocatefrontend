@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FaSearch, FaShoppingCart } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const BACKEND_URL = (
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
@@ -33,7 +34,13 @@ const statusLabelMap = {
   rejected: "Rejected/Reset",
 };
 
+const isImageUrl = (value) =>
+  typeof value === "string" &&
+  /^https?:\/\//i.test(value) &&
+  /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(value);
+
 function MinistryofConsumerAffairs() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -207,6 +214,18 @@ function MinistryofConsumerAffairs() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await axios.get(`${BACKEND_URL}/api/v1/ministry/auth/logout`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      navigate("/govt/login");
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100">
       <div className="w-80 bg-gradient-to-b from-indigo-900 via-blue-900 to-indigo-800 text-white shadow-2xl p-6">
@@ -246,7 +265,7 @@ function MinistryofConsumerAffairs() {
           CATEGORIES
         </h2>
 
-        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+        <div className="space-y-2 pr-1">
           <button
             onClick={() => setCategoryFilter("All")}
             className="w-full text-left px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20"
@@ -272,9 +291,17 @@ function MinistryofConsumerAffairs() {
 
       <div className="flex-1 p-8">
         <div className="mb-6">
-          <h1 className="text-4xl font-extrabold text-gray-800">
-            Consumer Affairs Dashboard
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl font-extrabold text-gray-800">
+              Consumer Affairs Dashboard
+            </h1>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+            >
+              Logout
+            </button>
+          </div>
           <p className="text-gray-600">
             Monitor consumer complaints & fraud reports
           </p>
@@ -314,6 +341,61 @@ function MinistryofConsumerAffairs() {
                     <div className="text-sm text-gray-400">
                       Reference: {getComplaintRef(c)}
                     </div>
+
+                    {(c.idProofUrl || c.supportingDocumentUrl || c.document) && (
+                      <div className="mt-3">
+                        <p className="text-sm font-semibold text-gray-600">
+                          Attachments
+                        </p>
+                        {isImageUrl(c.idProofUrl) && (
+                          <img
+                            src={c.idProofUrl}
+                            alt="ID Proof"
+                            className="mt-2 max-h-32 rounded-md border border-gray-200"
+                          />
+                        )}
+                        {isImageUrl(c.supportingDocumentUrl) && (
+                          <img
+                            src={c.supportingDocumentUrl}
+                            alt="Supporting Document"
+                            className="mt-2 max-h-32 rounded-md border border-gray-200"
+                          />
+                        )}
+                        {c.idProofUrl && !isImageUrl(c.idProofUrl) && (
+                          <a
+                            href={c.idProofUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block text-sm text-blue-600 hover:underline mt-1"
+                          >
+                            View ID Proof
+                          </a>
+                        )}
+                        {c.supportingDocumentUrl && !isImageUrl(c.supportingDocumentUrl) && (
+                          <a
+                            href={c.supportingDocumentUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block text-sm text-blue-600 hover:underline mt-1"
+                          >
+                            View Supporting Document
+                          </a>
+                        )}
+                        {c.document &&
+                          c.document !== c.idProofUrl &&
+                          c.document !== c.supportingDocumentUrl &&
+                          !isImageUrl(c.document) && (
+                            <a
+                              href={c.document}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block text-sm text-blue-600 hover:underline mt-1"
+                            >
+                              View Document
+                            </a>
+                          )}
+                      </div>
+                    )}
 
                     <div className="mt-4">
                       <textarea

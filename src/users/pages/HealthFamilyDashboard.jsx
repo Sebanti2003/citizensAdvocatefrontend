@@ -107,6 +107,40 @@ function HealthFamilyDashboard() {
     });
   };
 
+  const removeFile = (fieldName) => {
+    setComplaint((prev) => ({
+      ...prev,
+      [fieldName]: null,
+    }));
+  };
+
+  const renderFilePreview = (file, fieldName) => {
+    if (!file) return null;
+    const isImage = file.type?.startsWith("image/");
+
+    return (
+      <div className="mt-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
+        {isImage ? (
+          <img
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            className="max-h-28 rounded-md border border-gray-200 mb-2"
+          />
+        ) : null}
+        <p className="text-xs text-gray-700 break-all">
+          {file.name} ({file.type || "Unknown type"})
+        </p>
+        <button
+          type="button"
+          onClick={() => removeFile(fieldName)}
+          className="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
+        >
+          Remove
+        </button>
+      </div>
+    );
+  };
+
   // Repost Complaint
   const handleRepostComplaint = (oldComplaint) => {
     setComplaint({
@@ -130,14 +164,23 @@ function HealthFamilyDashboard() {
     e.preventDefault();
 
     try {
+      const formData = new FormData();
+      formData.append("hospitalid", complaint.hospitalid);
+      formData.append("hospitalname", complaint.hospitalname);
+      formData.append("category", complaint.category);
+      formData.append("date", complaint.date);
+      formData.append("description", complaint.description);
+      if (complaint.idProof) formData.append("idProof", complaint.idProof);
+      if (complaint.supportingDocuments) {
+        formData.append("supportingDocuments", complaint.supportingDocuments);
+      }
+
       const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofHealthFamilyWelfarepostcomplaint",
-        {
-          ...complaint,
-          document: "imgtoday.jpg",
-        },
+        formData,
         {
           withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
@@ -310,6 +353,7 @@ function HealthFamilyDashboard() {
                 onChange={handleFileChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
               />
+              {renderFilePreview(complaint.idProof, "idProof")}
             </div>
 
             {/* Supporting Documents for Grievance */}
@@ -324,11 +368,9 @@ function HealthFamilyDashboard() {
                 onChange={handleFileChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
               />
-
-              {complaint.supportingDocuments && (
-                <p className="text-sm text-green-700 mt-1">
-                  Selected File: {complaint.supportingDocuments.name}
-                </p>
+              {renderFilePreview(
+                complaint.supportingDocuments,
+                "supportingDocuments"
               )}
             </div>
 

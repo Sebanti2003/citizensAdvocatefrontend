@@ -105,6 +105,40 @@ function ConsumerAffairsDashboard() {
     });
   };
 
+  const removeFile = (fieldName) => {
+    setComplaint((prev) => ({
+      ...prev,
+      [fieldName]: null,
+    }));
+  };
+
+  const renderFilePreview = (file, fieldName) => {
+    if (!file) return null;
+    const isImage = file.type?.startsWith("image/");
+
+    return (
+      <div className="mt-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
+        {isImage ? (
+          <img
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            className="max-h-28 rounded-md border border-gray-200 mb-2"
+          />
+        ) : null}
+        <p className="text-xs text-gray-700 break-all">
+          {file.name} ({file.type || "Unknown type"})
+        </p>
+        <button
+          type="button"
+          onClick={() => removeFile(fieldName)}
+          className="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
+        >
+          Remove
+        </button>
+      </div>
+    );
+  };
+
   // Repost Complaint
   const handleRepostComplaint = (oldComplaint) => {
     setComplaint({
@@ -126,19 +160,23 @@ function ConsumerAffairsDashboard() {
   const handleSubmit = async (e) => {
     try {
       e.preventDefault();
+      const formData = new FormData();
+      formData.append("productid", complaint.productid);
+      formData.append("productname", complaint.productname);
+      formData.append("category", complaint.category);
+      formData.append("date", complaint.date);
+      formData.append("description", complaint.description);
+      if (complaint.idProof) formData.append("idProof", complaint.idProof);
+      if (complaint.supportingDocuments) {
+        formData.append("supportingDocuments", complaint.supportingDocuments);
+      }
 
       const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofconsumeraffairspostcomplaint",
-        {
-          productid: complaint.productid,
-          productname: complaint.productname,
-          category: complaint.category,
-          date: complaint.date,
-          description: complaint.description,
-          document: "img",
-        },
+        formData,
         {
           withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
@@ -312,6 +350,7 @@ function ConsumerAffairsDashboard() {
               onChange={handleFileChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
             />
+            {renderFilePreview(complaint.idProof, "idProof")}
           </div>
 
           <div>
@@ -325,6 +364,10 @@ function ConsumerAffairsDashboard() {
               onChange={handleFileChange}
               className="w-full p-2 border border-gray-300 rounded-lg"
             />
+            {renderFilePreview(
+              complaint.supportingDocuments,
+              "supportingDocuments"
+            )}
           </div>
 
           {/* Submit Button */}

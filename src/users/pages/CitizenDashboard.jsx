@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FaUserCircle,
@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getAllComplaints } from "../../utils/complaintsStorage";
 
 function CitizenDashboard() {
   const navigate = useNavigate();
@@ -32,63 +33,11 @@ function CitizenDashboard() {
     "Education",
   ];
 
-  // Hardcoded complaints for UI preview
-  const complaints = [
-    {
-      id: 1,
-      ministry: "Railways",
-      title: "Dirty Train Washrooms",
-      status: "Submitted",
-      date: "2026-05-01",
-      description:
-        "Washrooms were not cleaned properly during the journey.",
-    },
-    {
-      id: 2,
-      ministry: "Road Transport",
-      title: "Potholes on Highway",
-      status: "Pending",
-      date: "2026-05-02",
-      description:
-        "Large potholes causing traffic congestion and accidents.",
-    },
-    {
-      id: 3,
-      ministry: "Consumer Affairs",
-      title: "Fake Product Delivered",
-      status: "Resolved",
-      date: "2026-05-03",
-      description:
-        "Received counterfeit product from online shopping platform.",
-    },
-    {
-      id: 4,
-      ministry: "Health & Family Welfare",
-      title: "Hospital Overcharging",
-      status: "Under Review",
-      date: "2026-05-03",
-      description:
-        "Private hospital charged extra fees without explanation.",
-    },
-    {
-      id: 5,
-      ministry: "Women & Child Development",
-      title: "Cyber Harassment Complaint",
-      status: "Pending",
-      date: "2026-05-04",
-      description:
-        "Receiving repeated abusive messages on social media.",
-    },
-    {
-      id: 6,
-      ministry: "Education",
-      title: "Scholarship Delay",
-      status: "Resolved",
-      date: "2026-05-04",
-      description:
-        "Scholarship amount has not been credited for months.",
-    },
-  ];
+  const [complaints, setComplaints] = useState([]);
+
+  useEffect(() => {
+    setComplaints(getAllComplaints());
+  }, []);
 
   const filteredComplaints = complaints.filter((complaint) => {
     const ministryMatch =
@@ -373,6 +322,17 @@ function CitizenDashboard() {
                     {complaint.description}
                   </p>
                 </div>
+
+                {complaint.ministryComment && (
+                  <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                    <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                      Government Complaint Update
+                    </p>
+                    <p className="text-sm text-indigo-900 mt-1">
+                      {complaint.ministryComment}
+                    </p>
+                  </div>
+                )}
 
                 {/* Bottom */}
                 <div className="mt-6 flex justify-between items-center">

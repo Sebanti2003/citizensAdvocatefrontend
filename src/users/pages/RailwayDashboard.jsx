@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { addComplaint } from "../../utils/complaintsStorage";
 
 function RailwaysDashboard() {
   const trainData = {
@@ -31,7 +32,6 @@ function RailwaysDashboard() {
     "TTE & Railway Staff Misconduct",
   ];
 
-  // Only Pending Complaints
   const previousComplaints = [
     {
       id: 1,
@@ -75,9 +75,11 @@ function RailwaysDashboard() {
     const { name, value } = e.target;
 
     if (name === "trainNumber") {
+      const mappedTrainName = trainData[value] || "";
       setComplaint({
         ...complaint,
         trainNumber: value,
+        trainName: mappedTrainName || complaint.trainName,
       });
     } else {
       setComplaint({
@@ -95,7 +97,40 @@ function RailwaysDashboard() {
     });
   };
 
-  // Repost Complaint
+  const removeFile = (fieldName) => {
+    setComplaint((prev) => ({
+      ...prev,
+      [fieldName]: null,
+    }));
+  };
+
+  const renderFilePreview = (file, fieldName) => {
+    if (!file) return null;
+    const isImage = file.type?.startsWith("image/");
+
+    return (
+      <div className="mt-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
+        {isImage ? (
+          <img
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            className="max-h-28 rounded-md border border-gray-200 mb-2"
+          />
+        ) : null}
+        <p className="text-xs text-gray-700 break-all">
+          {file.name} ({file.type || "Unknown type"})
+        </p>
+        <button
+          type="button"
+          onClick={() => removeFile(fieldName)}
+          className="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
+        >
+          Remove
+        </button>
+      </div>
+    );
+  };
+
   const handleRepostComplaint = (oldComplaint) => {
     setComplaint({
       trainNumber: oldComplaint.trainNumber,
@@ -116,45 +151,85 @@ function RailwaysDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    const resolvedTrainName =
+      complaint.trainName || trainData[complaint.trainNumber] || "";
+
+    if (
+      !complaint.trainNumber ||
+      !resolvedTrainName ||
+      !complaint.pnr ||
+      !complaint.category ||
+      !complaint.date ||
+      !complaint.description
+    ) {
+      setErrorMessage("Please fill all required fields.");
+      return;
+    }
+
+    const localComplaint = {
+      id: `R-${Date.now()}`,
+      ministry: "Railways",
+      title: `${complaint.category} - ${resolvedTrainName}`,
+      status: "Submitted",
+      date: complaint.date,
+      category: complaint.category,
+      description: complaint.description,
+      trainNumber: complaint.trainNumber,
+      trainName: resolvedTrainName,
+      pnr: complaint.pnr,
+      source: "client",
+      createdAt: new Date().toISOString(),
+    };
+
+    let uploadedIdProofUrl = "";
+    let uploadedSupportingDocumentUrl = "";
 
     try {
+      const formData = new FormData();
+      formData.append("trainNumber", complaint.trainNumber);
+      formData.append("trainName", resolvedTrainName);
+      formData.append("pnr", complaint.pnr);
+      formData.append("category", complaint.category);
+      formData.append("date", complaint.date);
+      formData.append("description", complaint.description);
+      if (complaint.idProof) formData.append("idProof", complaint.idProof);
+      if (complaint.supportingDocuments) {
+        formData.append("supportingDocuments", complaint.supportingDocuments);
+      }
+
       const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofrailwaypostcomplaint",
-        {
-          trainNumber: complaint.trainNumber,
-          trainName: complaint.trainName,
-          pnr: complaint.pnr,
-          category: complaint.category,
-          date: complaint.date,
-          description: complaint.description,
-          document: "picimg",
-        },
+        formData,
         {
           withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
-      const data = response.data;
-
-      if (data) {
-        setSuccessMessage("✅ Complaint Submitted Successfully!");
-
-        setComplaint({
-          trainNumber: "",
-          trainName: "",
-          pnr: "",
-          category: "",
-          date: "",
-          description: "",
-          idProof: null,
-          supportingDocuments: null,
-        });
-      } else {
-        setErrorMessage("❌ Failed to submit complaint.");
-      }
+      uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
+      uploadedSupportingDocumentUrl =
+        response?.data?.complaint?.supportingDocumentUrl || "";
     } catch (error) {
-      setErrorMessage(error.message);
+      console.error("Railway complaint API failed; storing client-side.", error);
     }
+
+    localComplaint.idProofUrl = uploadedIdProofUrl;
+    localComplaint.supportingDocumentUrl = uploadedSupportingDocumentUrl;
+    localComplaint.document = uploadedSupportingDocumentUrl || uploadedIdProofUrl || "";
+    addComplaint(localComplaint);
+    setSuccessMessage("Complaint submitted successfully.");
+    setComplaint({
+      trainNumber: "",
+      trainName: "",
+      pnr: "",
+      category: "",
+      date: "",
+      description: "",
+      idProof: null,
+      supportingDocuments: null,
+    });
 
     setTimeout(() => {
       setSuccessMessage("");
@@ -164,12 +239,9 @@ function RailwaysDashboard() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-auto">
-      {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-white to-green-600 transform -skew-y-6"></div>
-
       <div className="fixed inset-0 bg-white opacity-10 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')]"></div>
 
-      {/* Main Content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4">
         <motion.h1
           className="text-2xl font-bold text-gray-800 text-center mb-4"
@@ -179,7 +251,6 @@ function RailwaysDashboard() {
           Ministry of Railways Dashboard
         </motion.h1>
 
-        {/* Complaint Form */}
         <motion.div
           className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 mb-6"
           initial={{ opacity: 0, y: 20 }}
@@ -205,12 +276,8 @@ function RailwaysDashboard() {
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Train Number */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Train Number
-                </label>
-
+                <label className="block text-sm font-medium mb-1">Train Number</label>
                 <input
                   type="text"
                   name="trainNumber"
@@ -221,12 +288,8 @@ function RailwaysDashboard() {
                 />
               </div>
 
-              {/* Train Name */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Train Name
-                </label>
-
+                <label className="block text-sm font-medium mb-1">Train Name</label>
                 <input
                   type="text"
                   name="trainName"
@@ -238,12 +301,8 @@ function RailwaysDashboard() {
               </div>
             </div>
 
-            {/* PNR Number */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                PNR Number
-              </label>
-
+              <label className="block text-sm font-medium mb-1">PNR Number</label>
               <input
                 type="text"
                 name="pnr"
@@ -254,12 +313,8 @@ function RailwaysDashboard() {
               />
             </div>
 
-            {/* Category */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Category
-              </label>
-
+              <label className="block text-sm font-medium mb-1">Category</label>
               <select
                 name="category"
                 value={complaint.category}
@@ -267,7 +322,6 @@ function RailwaysDashboard() {
                 className="w-full p-2 border border-gray-300 rounded-lg"
               >
                 <option value="">Select a category</option>
-
                 {complaintCategories.map((category, index) => (
                   <option key={index} value={category}>
                     {category}
@@ -276,12 +330,8 @@ function RailwaysDashboard() {
               </select>
             </div>
 
-            {/* Date */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Date
-              </label>
-
+              <label className="block text-sm font-medium mb-1">Date</label>
               <input
                 type="date"
                 name="date"
@@ -291,12 +341,8 @@ function RailwaysDashboard() {
               />
             </div>
 
-            {/* Description */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Description
-              </label>
-
+              <label className="block text-sm font-medium mb-1">Description</label>
               <textarea
                 name="description"
                 value={complaint.description}
@@ -307,35 +353,33 @@ function RailwaysDashboard() {
               />
             </div>
 
-            {/* ID Proof */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                ID Proof
-              </label>
-
+              <label className="block text-sm font-medium mb-1">ID Proof</label>
               <input
                 type="file"
                 name="idProof"
                 onChange={handleFileChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
               />
+              {renderFilePreview(complaint.idProof, "idProof")}
             </div>
 
-            {/* Supporting Documents for Grievance */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Supporting Documents for Grievance
               </label>
-
               <input
                 type="file"
                 name="supportingDocuments"
                 onChange={handleFileChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
               />
+              {renderFilePreview(
+                complaint.supportingDocuments,
+                "supportingDocuments"
+              )}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -345,7 +389,6 @@ function RailwaysDashboard() {
           </form>
         </motion.div>
 
-        {/* Previous Complaints */}
         <motion.div
           className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4"
           initial={{ opacity: 0, y: 20 }}
@@ -364,29 +407,12 @@ function RailwaysDashboard() {
               >
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
                   <div>
-                    <h3 className="text-lg font-semibold text-blue-700">
-                      {item.trainName}
-                    </h3>
-
-                    <p className="text-sm text-gray-600">
-                      Train Number: {item.trainNumber}
-                    </p>
-
-                    <p className="text-sm text-gray-600">
-                      PNR: {item.pnr}
-                    </p>
-
-                    <p className="text-sm text-gray-600">
-                      Category: {item.category}
-                    </p>
-
-                    <p className="text-sm text-gray-600">
-                      Date: {item.date}
-                    </p>
-
-                    <p className="text-sm font-medium mt-1 text-red-600">
-                      Status: {item.status}
-                    </p>
+                    <h3 className="text-lg font-semibold text-blue-700">{item.trainName}</h3>
+                    <p className="text-sm text-gray-600">Train Number: {item.trainNumber}</p>
+                    <p className="text-sm text-gray-600">PNR: {item.pnr}</p>
+                    <p className="text-sm text-gray-600">Category: {item.category}</p>
+                    <p className="text-sm text-gray-600">Date: {item.date}</p>
+                    <p className="text-sm font-medium mt-1 text-red-600">Status: {item.status}</p>
                   </div>
 
                   <button
@@ -397,9 +423,7 @@ function RailwaysDashboard() {
                   </button>
                 </div>
 
-                <p className="mt-3 text-gray-700">
-                  {item.description}
-                </p>
+                <p className="mt-3 text-gray-700">{item.description}</p>
               </motion.div>
             ))}
           </div>
