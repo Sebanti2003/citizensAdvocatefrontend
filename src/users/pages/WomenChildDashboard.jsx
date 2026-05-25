@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { addComplaint } from "../../utils/complaintsStorage";
 
 function WomenChildDashboard() {
   const serviceData = {
@@ -158,6 +159,25 @@ function WomenChildDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    const localComplaint = {
+      id: `WCD-${Date.now()}`,
+      ministry: "Women & Child Development",
+      title: `${complaint.category} - ${complaint.issuetype || "Women and Child Complaint"}`,
+      status: "Pending",
+      date: complaint.date,
+      category: complaint.category,
+      description: complaint.description,
+      issuecode: complaint.issuecode,
+      issuetype: complaint.issuetype,
+      source: "client",
+      createdAt: new Date().toISOString(),
+    };
+
+    let uploadedIdProofUrl = "";
+    let uploadedSupportingDocumentUrl = "";
 
     try {
       const formData = new FormData();
@@ -171,7 +191,7 @@ function WomenChildDashboard() {
         formData.append("supportingDocuments", complaint.supportingDocuments);
       }
 
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:3000/api/v1/complaints/ministryofWomenandChildrenDevelopmentpostcomplaint",
         formData,
         {
@@ -180,22 +200,28 @@ function WomenChildDashboard() {
         }
       );
 
-      setSuccessMessage("✅ Complaint Submitted Successfully!");
-
-      setComplaint({
-        issuecode: "",
-        issuetype: "",
-        category: "",
-        date: "",
-        description: "",
-        idProof: null,
-        supportingDocuments: null,
-      });
+      uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
+      uploadedSupportingDocumentUrl =
+        response?.data?.complaint?.supportingDocumentUrl || "";
     } catch (error) {
-      console.error("Error submitting complaint:", error);
-
-      setErrorMessage("❌ Error submitting complaint. Please try again.");
+      console.error("Women & Child complaint API failed; storing client-side.", error);
     }
+
+    localComplaint.idProofUrl = uploadedIdProofUrl;
+    localComplaint.supportingDocumentUrl = uploadedSupportingDocumentUrl;
+    localComplaint.document = uploadedSupportingDocumentUrl || uploadedIdProofUrl || "";
+    addComplaint(localComplaint);
+    setSuccessMessage("Complaint submitted successfully.");
+
+    setComplaint({
+      issuecode: "",
+      issuetype: "",
+      category: "",
+      date: "",
+      description: "",
+      idProof: null,
+      supportingDocuments: null,
+    });
 
     setTimeout(() => {
       setSuccessMessage("");

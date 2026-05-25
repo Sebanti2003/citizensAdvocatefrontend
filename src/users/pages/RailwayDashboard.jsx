@@ -173,7 +173,7 @@ function RailwaysDashboard() {
       id: `R-${Date.now()}`,
       ministry: "Railways",
       title: `${complaint.category} - ${resolvedTrainName}`,
-      status: "Submitted",
+      status: "Pending",
       date: complaint.date,
       category: complaint.category,
       description: complaint.description,

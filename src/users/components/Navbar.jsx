@@ -80,7 +80,7 @@
 //             href="/govt/EmployeeRegistration"
 //             className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
 //           >
-//             👤 Employee Registration
+//             Employee Dashboard
 //           </a>
 //           <a
 //             href="/govt/login"
@@ -212,9 +212,9 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <div
-            onClick={()=>{navigate('/govt/EmployeeRegistration')}} className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
+            onClick={()=>{navigate('/govt/employee/login')}} className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
           >
-            👤 Employee Registration
+            Employee Dashboard
           </div>
           <div
             onClick={()=>{navigate('/govt/login')}} className="px-3 py-1 bg-orange-500 text-white rounded-md text-xs hover:bg-orange-600"

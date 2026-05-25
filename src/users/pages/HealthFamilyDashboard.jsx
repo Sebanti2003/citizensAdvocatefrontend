@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { addComplaint } from "../../utils/complaintsStorage";
 
 function HealthFamilyDashboard() {
   const hospitalData = {
@@ -162,6 +163,25 @@ function HealthFamilyDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    const localComplaint = {
+      id: `H-${Date.now()}`,
+      ministry: "Health & Family Welfare",
+      title: `${complaint.category} - ${complaint.hospitalname || "Health Complaint"}`,
+      status: "Pending",
+      date: complaint.date,
+      category: complaint.category,
+      description: complaint.description,
+      hospitalid: complaint.hospitalid,
+      hospitalname: complaint.hospitalname,
+      source: "client",
+      createdAt: new Date().toISOString(),
+    };
+
+    let uploadedIdProofUrl = "";
+    let uploadedSupportingDocumentUrl = "";
 
     try {
       const formData = new FormData();
@@ -184,28 +204,28 @@ function HealthFamilyDashboard() {
         }
       );
 
-      console.log(response.data);
-
-      setSuccessMessage("✅ Complaint Submitted Successfully!");
-
-      setComplaint({
-        ministry: "67b0a143a3336b7a78621915",
-        hospitalid: "",
-        hospitalname: "",
-        category: "",
-        date: "",
-        description: "",
-        idProof: null,
-        supportingDocuments: null,
-      });
+      uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
+      uploadedSupportingDocumentUrl =
+        response?.data?.complaint?.supportingDocumentUrl || "";
     } catch (error) {
-      console.error("Error submitting complaint:", error);
-
-      setErrorMessage(
-        error.response?.data?.message ||
-          "❌ Failed to submit complaint."
-      );
+      console.error("Health complaint API failed; storing client-side.", error);
     }
+
+    localComplaint.idProofUrl = uploadedIdProofUrl;
+    localComplaint.supportingDocumentUrl = uploadedSupportingDocumentUrl;
+    localComplaint.document = uploadedSupportingDocumentUrl || uploadedIdProofUrl || "";
+    addComplaint(localComplaint);
+    setSuccessMessage("Complaint submitted successfully.");
+    setComplaint({
+      ministry: "67b0a143a3336b7a78621915",
+      hospitalid: "",
+      hospitalname: "",
+      category: "",
+      date: "",
+      description: "",
+      idProof: null,
+      supportingDocuments: null,
+    });
 
     setTimeout(() => {
       setSuccessMessage("");

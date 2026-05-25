@@ -52,6 +52,7 @@ function MinistryofConsumerAffairs() {
   const [error, setError] = useState("");
   const [commentDrafts, setCommentDrafts] = useState({});
   const [savingById, setSavingById] = useState({});
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
 
   const fetchDepartmentalComplaints = async () => {
     try {
@@ -342,24 +343,36 @@ function MinistryofConsumerAffairs() {
                       Reference: {getComplaintRef(c)}
                     </div>
 
-                    {(c.idProofUrl || c.supportingDocumentUrl || c.document) && (
+                    {(c.idProofUrl || c.supportingDocumentUrl) && (
                       <div className="mt-3">
                         <p className="text-sm font-semibold text-gray-600">
                           Attachments
                         </p>
                         {isImageUrl(c.idProofUrl) && (
-                          <img
-                            src={c.idProofUrl}
-                            alt="ID Proof"
-                            className="mt-2 max-h-32 rounded-md border border-gray-200"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImageUrl(c.idProofUrl)}
+                            className="mt-2"
+                          >
+                            <img
+                              src={c.idProofUrl}
+                              alt="ID Proof"
+                              className="max-h-32 rounded-md border border-gray-200"
+                            />
+                          </button>
                         )}
                         {isImageUrl(c.supportingDocumentUrl) && (
-                          <img
-                            src={c.supportingDocumentUrl}
-                            alt="Supporting Document"
-                            className="mt-2 max-h-32 rounded-md border border-gray-200"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImageUrl(c.supportingDocumentUrl)}
+                            className="mt-2"
+                          >
+                            <img
+                              src={c.supportingDocumentUrl}
+                              alt="Supporting Document"
+                              className="max-h-32 rounded-md border border-gray-200"
+                            />
+                          </button>
                         )}
                         {c.idProofUrl && !isImageUrl(c.idProofUrl) && (
                           <a
@@ -381,19 +394,6 @@ function MinistryofConsumerAffairs() {
                             View Supporting Document
                           </a>
                         )}
-                        {c.document &&
-                          c.document !== c.idProofUrl &&
-                          c.document !== c.supportingDocumentUrl &&
-                          !isImageUrl(c.document) && (
-                            <a
-                              href={c.document}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block text-sm text-blue-600 hover:underline mt-1"
-                            >
-                              View Document
-                            </a>
-                          )}
                       </div>
                     )}
 
@@ -467,6 +467,19 @@ function MinistryofConsumerAffairs() {
           </div>
         )}
       </div>
+
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImageUrl("")}
+        >
+          <img
+            src={previewImageUrl}
+            alt="Full preview"
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        </div>
+      )}
     </div>
   );
 }

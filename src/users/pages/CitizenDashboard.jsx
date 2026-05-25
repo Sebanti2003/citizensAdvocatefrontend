@@ -188,20 +188,7 @@ function CitizenDashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-blue-100 border border-blue-200 rounded-2xl p-4 text-center shadow">
-                <h2 className="text-3xl font-bold text-blue-600">
-                  {
-                    complaints.filter(
-                      (c) => c.status === "Submitted"
-                    ).length
-                  }
-                </h2>
-
-                <p className="text-sm font-medium text-gray-700 mt-1">
-                  Submitted
-                </p>
-              </div>
+            <div className="grid grid-cols-3 gap-4">
 
               <div className="bg-red-100 border border-red-200 rounded-2xl p-4 text-center shadow">
                 <h2 className="text-3xl font-bold text-red-600">
@@ -252,7 +239,6 @@ function CitizenDashboard() {
         <div className="flex flex-wrap gap-4 mt-8">
           {[
             "All",
-            "Submitted",
             "Pending",
             "Under Review",
             "Resolved",

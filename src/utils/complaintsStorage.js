@@ -5,7 +5,7 @@ const seedComplaints = [
     id: "R-1001",
     ministry: "Railways",
     title: "Dirty Train Washrooms",
-    status: "Submitted",
+    status: "Pending",
     date: "2026-05-01",
     category: "Train Cleanliness & Hygiene",
     description: "Washrooms were not cleaned properly during the journey.",
@@ -92,6 +92,22 @@ export const transferComplaintsToMinistry = (ids, ministry) => {
           ...c,
           ministry,
           status: "Pending",
+        }
+      : c
+  );
+  saveAllComplaints(next);
+  return next;
+};
+
+export const assignComplaintsToEmployee = (ids, employee) => {
+  const idSet = new Set(ids);
+  const all = getAllComplaints();
+  const next = all.map((c) =>
+    idSet.has(c.id)
+      ? {
+          ...c,
+          assignedTo: employee?.name || "",
+          assignedEmployeeId: employee?.employeeId || "",
         }
       : c
   );

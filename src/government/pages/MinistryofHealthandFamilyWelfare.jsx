@@ -4,10 +4,17 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
+  assignComplaintsToEmployee,
+  deleteComplaintById,
   getAllComplaints,
   transferComplaintsToMinistry,
+  updateComplaintComment,
   updateComplaintStatus,
 } from "../../utils/complaintsStorage";
+
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
+).replace(/\/+$/, "");
 
 function MinistryOfHealthAndFamilyWelfare() {
   const navigate = useNavigate();
@@ -17,6 +24,14 @@ function MinistryOfHealthAndFamilyWelfare() {
   const [isTransferMode, setIsTransferMode] = useState(false);
   const [selectedTransferComplaintIds, setSelectedTransferComplaintIds] = useState([]);
   const [targetMinistry, setTargetMinistry] = useState("");
+  const [isAssignMode, setIsAssignMode] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
+  const [expandedComplaintId, setExpandedComplaintId] = useState(null);
+  const [commentModalComplaint, setCommentModalComplaint] = useState(null);
+  const [deleteModalComplaint, setDeleteModalComplaint] = useState(null);
+  const [commentDraft, setCommentDraft] = useState("");
 
   // ✅ HEALTH CATEGORIES (ONLY CHANGE)
   const categories = [
@@ -47,6 +62,24 @@ function MinistryOfHealthAndFamilyWelfare() {
       (complaint) => complaint.ministry === "Health & Family Welfare"
     );
     setComplaints(healthComplaints);
+  }, []);
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/v1/employees/getallemployees`);
+        const allEmployees = Array.isArray(response.data) ? response.data : [];
+        setEmployees(
+          allEmployees.filter(
+            (emp) =>
+              emp.department === "Ministry of Health and Family Welfare" ||
+              emp.department === "Ministry of Health"
+          )
+        );
+      } catch (error) {
+        console.log("Failed to fetch employees", error);
+      }
+    };
+    fetchEmployees();
   }, []);
 
   const updateStatus = (id, newStatus) => {
@@ -80,6 +113,43 @@ function MinistryOfHealthAndFamilyWelfare() {
       return "bg-yellow-500 text-white";
     return "bg-red-500 text-white";
   };
+  const isImageUrl = (value) =>
+    typeof value === "string" &&
+    /^https?:\/\//i.test(value) &&
+    /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(value);
+  const getAttachmentUrls = (complaint) => {
+    return [complaint.idProofUrl, complaint.supportingDocumentUrl]
+      .filter((url) => typeof url === "string" && url.trim())
+      .map((url) => url.trim());
+  };
+  const formatFieldLabel = (key) =>
+    key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+  const isUrl = (value) =>
+    typeof value === "string" && /^https?:\/\//i.test(value);
+
+  const saveComment = () => {
+    if (!commentModalComplaint) return;
+    updateComplaintComment(commentModalComplaint.id, commentDraft.trim());
+    const healthComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Health & Family Welfare"
+    );
+    setComplaints(healthComplaints);
+    setCommentModalComplaint(null);
+    setCommentDraft("");
+  };
+
+  const confirmDeleteComplaint = () => {
+    if (!deleteModalComplaint) return;
+    deleteComplaintById(deleteModalComplaint.id);
+    const healthComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Health & Family Welfare"
+    );
+    setComplaints(healthComplaints);
+    setExpandedComplaintId((prev) =>
+      prev === deleteModalComplaint.id ? null : prev
+    );
+    setDeleteModalComplaint(null);
+  };
 
   const handleLogout = async () => {
     try {
@@ -109,6 +179,24 @@ function MinistryOfHealthAndFamilyWelfare() {
     setSelectedTransferComplaintIds((prev) =>
       checked ? [...prev, complaintId] : prev.filter((id) => id !== complaintId)
     );
+  };
+  const handleAssignComplaintsToEmployee = () => {
+    if (!selectedTransferComplaintIds.length || !selectedEmployeeId) return;
+    const selectedEmployee = employees.find(
+      (emp) => emp.employeeId === selectedEmployeeId
+    );
+    if (!selectedEmployee) return;
+    assignComplaintsToEmployee(selectedTransferComplaintIds, selectedEmployee);
+    const healthComplaints = getAllComplaints().filter(
+      (complaint) => complaint.ministry === "Health & Family Welfare"
+    );
+    setComplaints(healthComplaints);
+    setSelectedTransferComplaintIds([]);
+    setSelectedEmployeeId("");
+    setIsAssignMode(false);
+  };
+  const toggleComplaintDetails = (complaintId) => {
+    setExpandedComplaintId((prev) => (prev === complaintId ? null : complaintId));
   };
 
   return (
@@ -203,11 +291,29 @@ function MinistryOfHealthAndFamilyWelfare() {
                     setTargetMinistry("");
                     return;
                   }
+                  setIsAssignMode(false);
+                  setSelectedEmployeeId("");
                   setIsTransferMode(true);
                 }}
                 className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
               >
                 {isTransferMode ? "Cancel Transfer" : "Transfer Complaints"}
+              </button>
+              <button
+                onClick={() => {
+                  if (isAssignMode) {
+                    setIsAssignMode(false);
+                    setSelectedTransferComplaintIds([]);
+                    setSelectedEmployeeId("");
+                    return;
+                  }
+                  setIsTransferMode(false);
+                  setTargetMinistry("");
+                  setIsAssignMode(true);
+                }}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                {isAssignMode ? "Cancel Assign" : "Select Employee"}
               </button>
               <button
                 onClick={handleLogout}
@@ -217,6 +323,9 @@ function MinistryOfHealthAndFamilyWelfare() {
               </button>
             </div>
           </div>
+          <p className="text-gray-600">
+            Monitor healthcare complaints & resolution workflow
+          </p>
           {isTransferMode && (
             <div className="mt-3 flex items-center gap-2">
               <select
@@ -240,9 +349,29 @@ function MinistryOfHealthAndFamilyWelfare() {
               </button>
             </div>
           )}
-          <p className="text-gray-600">
-            Monitor healthcare complaints & resolution workflow
-          </p>
+          {isAssignMode && (
+            <div className="mt-3 flex items-center gap-2">
+              <select
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className="border border-indigo-500 text-indigo-700 bg-indigo-50 rounded-lg px-3 py-2"
+              >
+                <option value="">Select health employee</option>
+                {employees.map((employee) => (
+                  <option key={employee.employeeId} value={employee.employeeId}>
+                    {employee.name} ({employee.employeeId})
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleAssignComplaintsToEmployee}
+                disabled={!selectedTransferComplaintIds.length || !selectedEmployeeId}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition disabled:opacity-60"
+              >
+                Assign Selected ({selectedTransferComplaintIds.length})
+              </button>
+            </div>
+          )}
         </div>
 
         {/* CARDS */}
@@ -251,7 +380,8 @@ function MinistryOfHealthAndFamilyWelfare() {
             <motion.div
               key={c.id}
               whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-2xl shadow-lg p-6 border-l-8 border-pink-500"
+              onClick={() => toggleComplaintDetails(c.id)}
+              className="bg-white rounded-2xl shadow-lg p-6 border-l-8 border-pink-500 cursor-pointer"
             >
 
               <div className="flex justify-between">
@@ -273,31 +403,77 @@ function MinistryOfHealthAndFamilyWelfare() {
                   <div className="text-sm text-gray-400">
                     Assigned: {c.assignedTo || "-"}
                   </div>
+
+                  {getAttachmentUrls(c).length > 0 && (
+                    <div className="mt-3 flex gap-2 flex-wrap">
+                      {getAttachmentUrls(c)
+                        .filter((url) => isImageUrl(url))
+                        .map((url, idx) => (
+                          <button
+                            type="button"
+                            key={`${c.id}-img-${idx}`}
+                            onClick={() => setPreviewImageUrl(url)}
+                            className="border border-gray-200 rounded-md overflow-hidden"
+                          >
+                            <img
+                              src={url}
+                              alt="Attachment"
+                              className="h-16 w-16 object-cover"
+                            />
+                          </button>
+                        ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* RIGHT */}
                 <div className="text-right">
-                  {isTransferMode && (
+                  {(isTransferMode || isAssignMode) && (
                     <div className="mb-3 flex justify-end">
                       <label className="inline-flex items-center gap-2 text-xs text-gray-600">
                         <input
                           type="checkbox"
                           checked={selectedTransferComplaintIds.includes(c.id)}
                           onChange={(e) => toggleTransferSelection(c.id, e.target.checked)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                         Select
                       </label>
                     </div>
                   )}
 
-                  <span className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(c.status)}`}>
-                    {c.status}
-                  </span>
+                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                    <span className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(c.status)}`}>
+                      {c.status}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCommentModalComplaint(c);
+                        setCommentDraft(c.ministryComment || "");
+                      }}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-lg"
+                    >
+                      Comment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteModalComplaint(c);
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1 rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </div>
 
                   <div className="mt-4">
                     <select
                       value={c.status}
                       onChange={(e) => updateStatus(c.id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
                       className="border p-2 rounded-lg text-sm shadow-md"
                     >
                       <option>Pending</option>
@@ -308,11 +484,140 @@ function MinistryOfHealthAndFamilyWelfare() {
 
                 </div>
               </div>
-
+              <div className="mt-3 text-xs font-semibold text-indigo-600">
+                {expandedComplaintId === c.id
+                  ? "Click card to hide full details"
+                  : "Click card to view full details"}
+              </div>
+              {expandedComplaintId === c.id && (
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Complaint Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {Object.entries(c).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200"
+                      >
+                        <div className="text-xs font-semibold text-slate-500">
+                          {formatFieldLabel(key)}
+                        </div>
+                        <div className="text-sm text-slate-800 break-words">
+                          {value === null || value === undefined || value === "" ? (
+                            "-"
+                          ) : isImageUrl(value) ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewImageUrl(value);
+                              }}
+                              className="mt-1"
+                            >
+                              <img
+                                src={value}
+                                alt={formatFieldLabel(key)}
+                                className="max-h-40 rounded-md border border-slate-200 object-contain bg-white"
+                              />
+                            </button>
+                          ) : isUrl(value) ? (
+                            <a
+                              href={value}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View attachment
+                            </a>
+                          ) : (
+                            String(value)
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
       </div>
+
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImageUrl("")}
+        >
+          <img
+            src={previewImageUrl}
+            alt="Full preview"
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        </div>
+      )}
+      {commentModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Add Comment</h3>
+            <p className="text-sm text-gray-500 mb-4">{commentModalComplaint.title}</p>
+            <textarea
+              value={commentDraft}
+              onChange={(e) => setCommentDraft(e.target.value)}
+              placeholder="Write ministry comment..."
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCommentModalComplaint(null);
+                  setCommentDraft("");
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveComment}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Save Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Delete Complaint</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Are you sure you want to delete this complaint?
+            </p>
+            <p className="text-sm font-semibold text-gray-800 mb-5">
+              {deleteModalComplaint.title}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalComplaint(null)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteComplaint}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

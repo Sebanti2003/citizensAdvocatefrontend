@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { addComplaint } from "../../utils/complaintsStorage";
 
 function ConsumerAffairsDashboard() {
   const productData = {
@@ -158,8 +159,28 @@ function ConsumerAffairsDashboard() {
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    const localComplaint = {
+      id: `CA-${Date.now()}`,
+      ministry: "Consumer Affairs",
+      title: `${complaint.category} - ${complaint.productname || "Consumer Complaint"}`,
+      status: "Pending",
+      date: complaint.date,
+      category: complaint.category,
+      description: complaint.description,
+      productid: complaint.productid,
+      productname: complaint.productname,
+      source: "client",
+      createdAt: new Date().toISOString(),
+    };
+
+    let uploadedIdProofUrl = "";
+    let uploadedSupportingDocumentUrl = "";
+
     try {
-      e.preventDefault();
       const formData = new FormData();
       formData.append("productid", complaint.productid);
       formData.append("productname", complaint.productname);
@@ -180,28 +201,28 @@ function ConsumerAffairsDashboard() {
         }
       );
 
-      const data = response.data;
-
-      if (data) {
-        setSuccessMessage("✅ Complaint Submitted Successfully!");
-
-        setComplaint({
-          productid: "",
-          productname: "",
-          category: "",
-          date: "",
-          description: "",
-          idProof: null,
-          supportingDocuments: null,
-        });
-      } else {
-        setErrorMessage("❌ Failed to submit complaint.");
-      }
+      uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
+      uploadedSupportingDocumentUrl =
+        response?.data?.complaint?.supportingDocumentUrl || "";
     } catch (error) {
-      console.error("Error submitting complaint:", error);
-
-      setErrorMessage("❌ Failed to submit complaint. Please try again.");
+      console.error("Consumer complaint API failed; storing client-side.", error);
     }
+
+    localComplaint.idProofUrl = uploadedIdProofUrl;
+    localComplaint.supportingDocumentUrl = uploadedSupportingDocumentUrl;
+    localComplaint.document = uploadedSupportingDocumentUrl || uploadedIdProofUrl || "";
+    addComplaint(localComplaint);
+    setSuccessMessage("Complaint submitted successfully.");
+
+    setComplaint({
+      productid: "",
+      productname: "",
+      category: "",
+      date: "",
+      description: "",
+      idProof: null,
+      supportingDocuments: null,
+    });
 
     setTimeout(() => {
       setSuccessMessage("");

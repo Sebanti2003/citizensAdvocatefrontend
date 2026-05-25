@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { addComplaint } from "../../utils/complaintsStorage";
 
 function EducationDashboard() {
   const institutionData = {
@@ -158,6 +159,25 @@ function EducationDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    const localComplaint = {
+      id: `E-${Date.now()}`,
+      ministry: "Education",
+      title: `${complaint.category} - ${complaint.institutionname || "Education Complaint"}`,
+      status: "Pending",
+      date: complaint.date,
+      category: complaint.category,
+      description: complaint.description,
+      institutionid: complaint.institutionid,
+      institutionname: complaint.institutionname,
+      source: "client",
+      createdAt: new Date().toISOString(),
+    };
+
+    let uploadedIdProofUrl = "";
+    let uploadedSupportingDocumentUrl = "";
 
     try {
       const formData = new FormData();
@@ -180,28 +200,27 @@ function EducationDashboard() {
         }
       );
 
-      const data = response.data;
-
-      if (data) {
-        setSuccessMessage("✅ Complaint Submitted Successfully!");
-
-        setComplaint({
-          institutionid: "",
-          institutionname: "",
-          category: "",
-          date: "",
-          description: "",
-          idProof: null,
-          supportingDocuments: null,
-        });
-      } else {
-        setErrorMessage("❌ Failed to submit complaint.");
-      }
+      uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
+      uploadedSupportingDocumentUrl =
+        response?.data?.complaint?.supportingDocumentUrl || "";
     } catch (error) {
-      console.error("Error submitting complaint:", error);
-
-      setErrorMessage("❌ Failed to submit complaint. Please try again.");
+      console.error("Education complaint API failed; storing client-side.", error);
     }
+
+    localComplaint.idProofUrl = uploadedIdProofUrl;
+    localComplaint.supportingDocumentUrl = uploadedSupportingDocumentUrl;
+    localComplaint.document = uploadedSupportingDocumentUrl || uploadedIdProofUrl || "";
+    addComplaint(localComplaint);
+    setSuccessMessage("Complaint submitted successfully.");
+    setComplaint({
+      institutionid: "",
+      institutionname: "",
+      category: "",
+      date: "",
+      description: "",
+      idProof: null,
+      supportingDocuments: null,
+    });
 
     setTimeout(() => {
       setSuccessMessage("");

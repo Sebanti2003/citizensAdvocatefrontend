@@ -22,6 +22,8 @@ import WomenChildDashboard from './users/pages/WomenChildDashboard'
 import EmployeeRegistrationForm from './government/pages/EmployeeRegistrationForm'
 import MinistryofConsumerAffairs from './government/pages/MinistryofConsumerAffairsFoodandPublicDistribution'
 import MinistryofEducation from './government/pages/MinistryofEducation'
+import GovernmentEmployeeDashboard from './government/pages/GovernmentEmployeeDashboard'
+import EmployeeLogin from './government/pages/EmployeeLogin'
 
 function App() {
 
@@ -39,7 +41,10 @@ function App() {
         <Route path="/user/selectcategory" element={<SelectCategory />} />
         <Route path="/user/railwaydashboard" element={<RailwayDashboard />} />
         {/* Government side routes */}
+        <Route path="/govt/employee/login" element={<EmployeeLogin />} />
         <Route path="/govt/EmployeeRegistration" element={<EmployeeRegistrationForm />} />
+        <Route path="/govt/employee/dashboard" element={<GovernmentEmployeeDashboard />} />
+        <Route path="/govt/employee/dashboard/:ministrySlug" element={<GovernmentEmployeeDashboard />} />
         <Route path="/MinistryofHealthandFamilyWelfare" element={<MinistryofHealthandFamilyWelfare />} />
         <Route path="/MinistryofHealthandFamilyWelfare/:departmentId" element={<MinistryofHealthandFamilyWelfare />} />
         <Route path="/MinistryofEducation" element={<MinistryofEducation />} />

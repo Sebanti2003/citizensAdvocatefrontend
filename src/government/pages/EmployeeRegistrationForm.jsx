@@ -1,7 +1,18 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+const departmentToDashboardSlug = {
+    'Ministry of Railways': 'railways',
+    'Ministry of Consumer Affairs': 'consumer-affairs',
+    'Ministry of Women and Child Development': 'women-child-development',
+    'Ministry of Health': 'health-family-welfare',
+    'Ministry of Education': 'education',
+    'Ministry of Road Transport': 'road-transport',
+};
 
 const EmployeeRegistrationForm = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -17,6 +28,9 @@ const EmployeeRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const BACKEND_URL = (
+        import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+    ).replace(/\/+$/, '');
 
     const departments = [
         'Ministry of Railways',
@@ -41,8 +55,20 @@ const EmployeeRegistrationForm = () => {
         setSuccess('');
 
         try {
-            const response = await axios.post('http://localhost:3000/employeeregistration', formData);
+            await axios.post(
+                `${BACKEND_URL}/api/v1/employees/employeeregistration`,
+                formData
+            );
             setSuccess('Employee registered successfully!');
+
+            localStorage.setItem('employeeName', formData.name);
+            localStorage.setItem('employeeDepartment', formData.department);
+
+            const dashboardSlug = departmentToDashboardSlug[formData.department];
+            const nextRoute = dashboardSlug
+                ? `/govt/employee/dashboard/${dashboardSlug}`
+                : '/govt/employee/dashboard';
+
             setFormData({
                 name: '',
                 email: '',
@@ -54,6 +80,10 @@ const EmployeeRegistrationForm = () => {
                 address: '',
                 dateOfJoining: ''
             });
+
+            setTimeout(() => {
+                navigate(nextRoute);
+            }, 700);
         } catch (err) {
             setError(err.response?.data?.message || 'Error registering employee');
         } finally {

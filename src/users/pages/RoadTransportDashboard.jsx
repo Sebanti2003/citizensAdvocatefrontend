@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { addComplaint } from "../../utils/complaintsStorage";
 
 function RoadTransportDashboard() {
   const transportData = {
@@ -160,6 +161,25 @@ function RoadTransportDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    const localComplaint = {
+      id: `RT-${Date.now()}`,
+      ministry: "Road Transport",
+      title: `${complaint.category} - ${complaint.transportservicename || "Road Transport Complaint"}`,
+      status: "Pending",
+      date: complaint.date,
+      category: complaint.category,
+      description: complaint.description,
+      transportservicenumber: complaint.transportservicenumber,
+      transportservicename: complaint.transportservicename,
+      source: "client",
+      createdAt: new Date().toISOString(),
+    };
+
+    let uploadedIdProofUrl = "";
+    let uploadedSupportingDocumentUrl = "";
 
     try {
       const formData = new FormData();
@@ -182,25 +202,29 @@ function RoadTransportDashboard() {
         }
       );
 
-      console.log(response.data);
-
-      setSuccessMessage("✅ Complaint Submitted Successfully!");
-
-      setComplaint({
-        ministry: "67b0a135a3336b7a78621913",
-        transportservicenumber: "",
-        transportservicename: "",
-        category: "",
-        date: "",
-        description: "",
-        idProof: null,
-        supportingDocuments: null,
-      });
+      uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
+      uploadedSupportingDocumentUrl =
+        response?.data?.complaint?.supportingDocumentUrl || "";
     } catch (error) {
-      console.error("Error submitting complaint:", error);
-
-      setErrorMessage("❌ Failed to submit complaint.");
+      console.error("Road transport complaint API failed; storing client-side.", error);
     }
+
+    localComplaint.idProofUrl = uploadedIdProofUrl;
+    localComplaint.supportingDocumentUrl = uploadedSupportingDocumentUrl;
+    localComplaint.document = uploadedSupportingDocumentUrl || uploadedIdProofUrl || "";
+    addComplaint(localComplaint);
+    setSuccessMessage("Complaint submitted successfully.");
+
+    setComplaint({
+      ministry: "67b0a135a3336b7a78621913",
+      transportservicenumber: "",
+      transportservicename: "",
+      category: "",
+      date: "",
+      description: "",
+      idProof: null,
+      supportingDocuments: null,
+    });
 
     setTimeout(() => {
       setSuccessMessage("");

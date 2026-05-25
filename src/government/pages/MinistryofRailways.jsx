@@ -4,12 +4,17 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
+  assignComplaintsToEmployee,
   deleteComplaintById,
   getAllComplaints,
   transferComplaintsToMinistry,
   updateComplaintComment,
   updateComplaintStatus,
 } from "../../utils/complaintsStorage";
+
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
+).replace(/\/+$/, "");
 
 function MinistryofRailways() {
   const navigate = useNavigate();
@@ -21,9 +26,13 @@ function MinistryofRailways() {
   const [commentModalComplaint, setCommentModalComplaint] = useState(null);
   const [deleteModalComplaint, setDeleteModalComplaint] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [isTransferMode, setIsTransferMode] = useState(false);
   const [selectedTransferComplaintIds, setSelectedTransferComplaintIds] = useState([]);
   const [targetMinistry, setTargetMinistry] = useState("");
+  const [isAssignMode, setIsAssignMode] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 
   const complaintCategories = [
     "Train Delay & Rescheduling",
@@ -54,6 +63,24 @@ function MinistryofRailways() {
       (complaint) => complaint.ministry === "Railways"
     );
     setComplaints(railwayComplaints);
+  }, []);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get(
+          `${BACKEND_URL}/api/v1/employees/getallemployees`
+        );
+        const allEmployees = Array.isArray(response.data) ? response.data : [];
+        const railwayEmployees = allEmployees.filter(
+          (emp) => emp.department === "Ministry of Railways"
+        );
+        setEmployees(railwayEmployees);
+      } catch (error) {
+        console.log("Failed to fetch employees", error);
+      }
+    };
+    fetchEmployees();
   }, []);
 
   const updateStatus = (id, newStatus) => {
@@ -109,6 +136,25 @@ function MinistryofRailways() {
     );
   };
 
+  const handleAssignComplaintsToEmployee = () => {
+    if (!selectedTransferComplaintIds.length || !selectedEmployeeId) return;
+    const selectedEmployee = employees.find(
+      (emp) => emp.employeeId === selectedEmployeeId
+    );
+    if (!selectedEmployee) return;
+    assignComplaintsToEmployee(selectedTransferComplaintIds, selectedEmployee);
+    const railwayComplaints = getAllComplaints().filter(
+      (item) => item.ministry === "Railways"
+    );
+    setComplaints(railwayComplaints);
+    setExpandedComplaintId((prev) =>
+      selectedTransferComplaintIds.includes(prev) ? null : prev
+    );
+    setSelectedTransferComplaintIds([]);
+    setSelectedEmployeeId("");
+    setIsAssignMode(false);
+  };
+
   const filtered = useMemo(() => {
     return complaints.filter((c) => {
       const matchSearch =
@@ -127,7 +173,6 @@ function MinistryofRailways() {
     if (status === "Resolved") return "bg-green-500 text-white shadow-green-200";
     if (status === "Under Review")
       return "bg-yellow-500 text-white shadow-yellow-200";
-    if (status === "Submitted") return "bg-blue-500 text-white shadow-blue-200";
     return "bg-red-500 text-white shadow-red-200";
   };
 
@@ -153,6 +198,14 @@ function MinistryofRailways() {
     typeof value === "string" && /^https?:\/\//i.test(value);
   const isImageUrl = (value) =>
     isUrl(value) && /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(value);
+  const shouldHideAttachmentField = (complaint, key) => {
+    if (key !== "document") return false;
+    const hasPrimary =
+      (typeof complaint.idProofUrl === "string" && complaint.idProofUrl.trim()) ||
+      (typeof complaint.supportingDocumentUrl === "string" &&
+        complaint.supportingDocumentUrl.trim());
+    return Boolean(hasPrimary);
+  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100">
@@ -225,11 +278,29 @@ function MinistryofRailways() {
                     setTargetMinistry("");
                     return;
                   }
+                  setIsAssignMode(false);
+                  setSelectedEmployeeId("");
                   setIsTransferMode(true);
                 }}
                 className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
               >
                 {isTransferMode ? "Cancel Transfer" : "Transfer Complaints"}
+              </button>
+              <button
+                onClick={() => {
+                  if (isAssignMode) {
+                    setIsAssignMode(false);
+                    setSelectedTransferComplaintIds([]);
+                    setSelectedEmployeeId("");
+                    return;
+                  }
+                  setIsTransferMode(false);
+                  setTargetMinistry("");
+                  setIsAssignMode(true);
+                }}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                {isAssignMode ? "Cancel Assign" : "Select Employee"}
               </button>
               <button
                 onClick={handleLogout}
@@ -239,6 +310,7 @@ function MinistryofRailways() {
               </button>
             </div>
           </div>
+          <p className="text-gray-600">Monitor passenger complaints & resolution workflow</p>
           {isTransferMode && (
             <div className="mt-3 flex items-center gap-2">
               <select
@@ -262,7 +334,29 @@ function MinistryofRailways() {
               </button>
             </div>
           )}
-          <p className="text-gray-600">Monitor passenger complaints & resolution workflow</p>
+          {isAssignMode && (
+            <div className="mt-3 flex items-center gap-2">
+              <select
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className="border border-indigo-500 text-indigo-700 bg-indigo-50 rounded-lg px-3 py-2"
+              >
+                <option value="">Select railway employee</option>
+                {employees.map((employee) => (
+                  <option key={employee.employeeId} value={employee.employeeId}>
+                    {employee.name} ({employee.employeeId})
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleAssignComplaintsToEmployee}
+                disabled={!selectedTransferComplaintIds.length || !selectedEmployeeId}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition disabled:opacity-60"
+              >
+                Assign Selected ({selectedTransferComplaintIds.length})
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-5">
@@ -283,7 +377,7 @@ function MinistryofRailways() {
                 </div>
 
                 <div className="text-right">
-                  {isTransferMode && (
+                  {(isTransferMode || isAssignMode) && (
                     <div className="mb-3 flex justify-end">
                       <label className="inline-flex items-center gap-2 text-xs text-gray-600">
                         <input
@@ -350,7 +444,9 @@ function MinistryofRailways() {
                 <div className="mt-4 border-t pt-4">
                   <h3 className="text-sm font-bold text-gray-700 mb-3">Complaint Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Object.entries(c).map(([key, value]) => (
+                    {Object.entries(c)
+                      .filter(([key]) => !shouldHideAttachmentField(c, key))
+                      .map(([key, value]) => (
                       <div
                         key={key}
                         className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200"
@@ -362,11 +458,20 @@ function MinistryofRailways() {
                           {value === null || value === undefined || value === "" ? (
                             "-"
                           ) : isImageUrl(value) ? (
-                            <img
-                              src={value}
-                              alt={formatFieldLabel(key)}
-                              className="mt-1 max-h-40 rounded-md border border-slate-200 object-contain bg-white"
-                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewImageUrl(value);
+                              }}
+                              className="mt-1"
+                            >
+                              <img
+                                src={value}
+                                alt={formatFieldLabel(key)}
+                                className="max-h-40 rounded-md border border-slate-200 object-contain bg-white"
+                              />
+                            </button>
                           ) : isUrl(value) ? (
                             <a
                               href={value}
@@ -381,7 +486,7 @@ function MinistryofRailways() {
                           )}
                         </div>
                       </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               )}
@@ -460,6 +565,19 @@ function MinistryofRailways() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImageUrl("")}
+        >
+          <img
+            src={previewImageUrl}
+            alt="Full preview"
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
         </div>
       )}
     </div>
