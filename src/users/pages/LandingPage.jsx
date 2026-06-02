@@ -9,6 +9,7 @@ import FAQ from "../components/FAQ";
 import Contact from "../components/Contact";
 import ScrollToTop from "../components/ScrollToTop";
 import DarkModeToggle from "../components/DarkModeToggle";
+import Chatbot from "../components/Chatbot";
 
 const LandingPage = () => {
   return (
@@ -53,7 +54,10 @@ const LandingPage = () => {
       
       {/* Scroll to Top Button */}
       <ScrollToTop />
-      
+
+      {/* Floating Chatbot Assistant */}
+      <Chatbot />
+
       {/* Dark Mode Toggle (Global) - Commented out for now */}
       {/* <DarkModeToggle /> */}
     </div>
