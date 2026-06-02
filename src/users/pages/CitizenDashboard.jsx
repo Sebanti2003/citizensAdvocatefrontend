@@ -379,10 +379,6 @@ function CitizenDashboard() {
                   <div className="text-sm text-gray-400">
                     Complaint ID: #{complaint.id}
                   </div>
-
-                  <button className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-medium transition">
-                    Track Status
-                  </button>
                 </div>
               </div>
             </motion.div>
