@@ -24,7 +24,7 @@ const ScrollToTop = () => {
 
   return (
     <motion.div
-      className={`fixed bottom-5 right-5 z-50 ${
+      className={`fixed bottom-24 right-6 z-50 ${
         isVisible ? "block" : "hidden"
       }`}
       initial={{ opacity: 0, scale: 0 }}

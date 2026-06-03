@@ -2,6 +2,15 @@ import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const departments = [
+  { name: 'Railways', id: 'MOR-001' },
+  { name: 'Road Transport', id: 'MORTH-002' },
+  { name: 'Consumer Affairs', id: 'MOCAFPD-003' },
+  { name: 'Health & Family Welfare', id: 'MOHFW-004' },
+  { name: 'Women & Child Development', id: 'MOWCD-005' },
+  { name: 'Education', id: 'MOE-006' },
+];
+
 function GovtSign() {
   const navigate = useNavigate();
 
@@ -12,39 +21,12 @@ function GovtSign() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Same ministry data as Ministries.jsx
-  const ministries = [
-    {
-      id: 1,
-      title: '🚆 Railways',
-      value: 'Ministry of Railways',
-    },
-    {
-      id: 2,
-      title: '🏥 Health & Family Welfare',
-      value: 'Ministry of Health and Family Welfare',
-    },
-    {
-      id: 3,
-      title: '🚗 Road Transport',
-      value: 'Ministry of Road Transport and Highways',
-    },
-    {
-      id: 4,
-      title: '🎓 Education',
-      value: 'Ministry of Education',
-    },
-    {
-      id: 5,
-      title: '🛍️ Consumer Affairs',
-      value: 'Ministry of Consumer Affairs',
-    },
-    {
-      id: 6,
-      title: '👩‍👧 Women & Child Development',
-      value: 'Ministry of Women and Child Development',
-    },
-  ];
+  const handleDepartmentChange = (e) => {
+    const selectedName = e.target.value;
+    setDepartmentName(selectedName);
+    const match = departments.find((d) => d.name === selectedName);
+    setDepartmentId(match ? match.id : '');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,33 +72,27 @@ function GovtSign() {
         </h2>
 
         <form onSubmit={handleSubmit}>
-
-          {/* Ministry Dropdown */}
           <select
             value={departmentalname}
-            onChange={(e) => setDepartmentName(e.target.value)}
-            className="w-full p-2 mb-4 border border-gray-300 rounded"
+            onChange={handleDepartmentChange}
+            className="w-full p-2 mb-4 border border-gray-300 rounded bg-white"
             required
           >
-            <option value="">Select Ministry</option>
-
-            {ministries.map((ministry) => (
-              <option
-                key={ministry.id}
-                value={ministry.value}
-              >
-                {ministry.title}
+            <option value="" disabled>
+              Select Department Name
+            </option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.name}>
+                {d.name}
               </option>
             ))}
           </select>
-
-          {/* Manual Department ID */}
           <input
             type="text"
             placeholder="Department ID"
             value={departmentalid}
-            onChange={(e) => setDepartmentId(e.target.value)}
-            className="w-full p-2 mb-4 border border-gray-300 rounded"
+            readOnly
+            className="w-full p-2 mb-4 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
             required
           />
 

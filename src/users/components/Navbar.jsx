@@ -191,10 +191,66 @@ const Navbar = () => {
       }`}
     >
       <div className="w-full px-5 py-2 flex justify-between items-center bg-gradient-to-r from-orange-500 via-white to-green-600 shadow-lg">
-        {/* CN Circle Logo */}
-        <Link to="/" className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-white bg-opacity-30 flex items-center justify-center">
-            <span className="text-blue-900 font-bold text-sm">CN</span>
+        {/* Citizens' Advocate Logo */}
+        <Link to="/" className="flex items-center gap-2 group">
+          <svg
+            viewBox="0 0 48 48"
+            className="w-10 h-10 drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+            aria-label="Citizens' Advocate Logo"
+          >
+            <defs>
+              <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#1e3a8a" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+            </defs>
+            {/* Shield body */}
+            <path
+              d="M24 2 L42 8 V24 C42 35 34 43 24 46 C14 43 6 35 6 24 V8 Z"
+              fill="url(#shieldGrad)"
+              stroke="#FFFFFF"
+              strokeWidth="1.2"
+            />
+            {/* Saffron top band */}
+            <path d="M24 2 L42 8 V12 L24 8 L6 12 V8 Z" fill="#FF9933" />
+            {/* Green bottom band */}
+            <path
+              d="M9 34 C13 40 18 44 24 46 C30 44 35 40 39 34 Z"
+              fill="#138808"
+            />
+            {/* Ashoka Chakra ring */}
+            <circle
+              cx="24"
+              cy="23"
+              r="6.5"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="1.2"
+            />
+            {/* Chakra spokes */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const angle = (i * 30 - 90) * (Math.PI / 180);
+              return (
+                <line
+                  key={i}
+                  x1="24"
+                  y1="23"
+                  x2={24 + 6.5 * Math.cos(angle)}
+                  y2={23 + 6.5 * Math.sin(angle)}
+                  stroke="#FFFFFF"
+                  strokeWidth="0.7"
+                />
+              );
+            })}
+            <circle cx="24" cy="23" r="1.3" fill="#FFFFFF" />
+          </svg>
+          <div className="hidden sm:flex flex-col leading-none font-['Oswald'] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+            <span className="text-white font-extrabold text-sm tracking-wide">
+              CITIZENS&apos;
+            </span>
+            <span className="text-white font-extrabold text-base tracking-wider -mt-0.5">
+              ADVOCATE
+            </span>
           </div>
         </Link>
 
