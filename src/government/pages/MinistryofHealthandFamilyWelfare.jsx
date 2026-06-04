@@ -7,6 +7,7 @@ import {
   assignComplaintsToEmployee,
   deleteComplaintById,
   getAllComplaints,
+  subscribeToComplaints,
   transferComplaintsToMinistry,
   updateComplaintComment,
   updateComplaintStatus,
@@ -58,10 +59,16 @@ function MinistryOfHealthAndFamilyWelfare() {
   ];
 
   useEffect(() => {
-    const healthComplaints = getAllComplaints().filter(
-      (complaint) => complaint.ministry === "Health & Family Welfare"
-    );
-    setComplaints(healthComplaints);
+    const syncComplaints = () => {
+      const healthComplaints = getAllComplaints().filter(
+        (complaint) => complaint.ministry === "Health & Family Welfare"
+      );
+      setComplaints(healthComplaints);
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
   useEffect(() => {
     const fetchEmployees = async () => {

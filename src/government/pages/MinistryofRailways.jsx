@@ -7,6 +7,7 @@ import {
   assignComplaintsToEmployee,
   deleteComplaintById,
   getAllComplaints,
+  subscribeToComplaints,
   transferComplaintsToMinistry,
   updateComplaintComment,
   updateComplaintStatus,
@@ -59,10 +60,16 @@ function MinistryofRailways() {
   ];
 
   useEffect(() => {
-    const railwayComplaints = getAllComplaints().filter(
-      (complaint) => complaint.ministry === "Railways"
-    );
-    setComplaints(railwayComplaints);
+    const syncComplaints = () => {
+      const railwayComplaints = getAllComplaints().filter(
+        (complaint) => complaint.ministry === "Railways"
+      );
+      setComplaints(railwayComplaints);
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
 
   useEffect(() => {

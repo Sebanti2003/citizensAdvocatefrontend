@@ -7,6 +7,7 @@ import {
   assignComplaintsToEmployee,
   deleteComplaintById,
   getAllComplaints,
+  subscribeToComplaints,
   transferComplaintsToMinistry,
   updateComplaintComment,
   updateComplaintStatus,
@@ -56,10 +57,16 @@ function MinistryofWomenChildDevelopment() {
   ];
 
   useEffect(() => {
-    const womenChildComplaints = getAllComplaints().filter(
-      (complaint) => complaint.ministry === "Women & Child Development"
-    );
-    setComplaints(womenChildComplaints);
+    const syncComplaints = () => {
+      const womenChildComplaints = getAllComplaints().filter(
+        (complaint) => complaint.ministry === "Women & Child Development"
+      );
+      setComplaints(womenChildComplaints);
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
   useEffect(() => {
     const fetchEmployees = async () => {

@@ -1,4 +1,13 @@
 const STORAGE_KEY = "citizen_advocate_complaints_v1";
+const STORAGE_EVENT = "citizen-advocate-complaints-updated";
+const normalizeEmployeeId = (value) =>
+  typeof value === "string" ? value.trim().toLowerCase() : "";
+const normalizeComplaintStatus = (value) =>
+  value === "Submitted" ? "Pending" : value;
+const normalizeComplaint = (complaint) => ({
+  ...complaint,
+  status: normalizeComplaintStatus(complaint?.status || "Pending"),
+});
 
 const seedComplaints = [
   {
@@ -29,18 +38,47 @@ const parseComplaints = (raw) => {
 
 export const getAllComplaints = () => {
   const stored = parseComplaints(localStorage.getItem(STORAGE_KEY));
-  if (stored) return stored;
+  if (stored) {
+    const normalized = stored.map(normalizeComplaint);
+    const wasChanged = normalized.some(
+      (complaint, index) => complaint.status !== stored[index]?.status
+    );
+    if (wasChanged) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    }
+    return normalized;
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seedComplaints));
   return seedComplaints;
 };
 
 export const saveAllComplaints = (complaints) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(complaints));
+  window.dispatchEvent(new CustomEvent(STORAGE_EVENT));
+};
+
+export const subscribeToComplaints = (callback) => {
+  const handleChange = () => {
+    callback(getAllComplaints());
+  };
+
+  const handleStorage = (event) => {
+    if (event.key && event.key !== STORAGE_KEY) return;
+    handleChange();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(STORAGE_EVENT, handleChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(STORAGE_EVENT, handleChange);
+  };
 };
 
 export const addComplaint = (complaint) => {
   const all = getAllComplaints();
-  const next = [complaint, ...all];
+  const next = [normalizeComplaint(complaint), ...all];
   saveAllComplaints(next);
   return next;
 };
@@ -76,6 +114,8 @@ export const transferComplaintToMinistry = (id, ministry) => {
           ...c,
           ministry,
           status: "Pending",
+          assignedTo: "",
+          assignedEmployeeId: "",
         }
       : c
   );
@@ -92,6 +132,8 @@ export const transferComplaintsToMinistry = (ids, ministry) => {
           ...c,
           ministry,
           status: "Pending",
+          assignedTo: "",
+          assignedEmployeeId: "",
         }
       : c
   );
@@ -107,7 +149,7 @@ export const assignComplaintsToEmployee = (ids, employee) => {
       ? {
           ...c,
           assignedTo: employee?.name || "",
-          assignedEmployeeId: employee?.employeeId || "",
+          assignedEmployeeId: normalizeEmployeeId(employee?.employeeId),
         }
       : c
   );

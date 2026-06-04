@@ -11,6 +11,9 @@ const departmentToDashboardSlug = {
   "Ministry of Road Transport": "road-transport",
 };
 
+const normalizeEmployeeId = (value) =>
+  typeof value === "string" ? value.trim().toLowerCase() : "";
+
 function EmployeeLogin() {
   const navigate = useNavigate();
   const [employeeId, setEmployeeId] = useState("");
@@ -41,7 +44,10 @@ function EmployeeLogin() {
 
       localStorage.setItem("employeeName", employee.name);
       localStorage.setItem("employeeDepartment", employee.department);
-      localStorage.setItem("employeeId", employee.employeeId);
+      localStorage.setItem(
+        "employeeId",
+        normalizeEmployeeId(employee.employeeId)
+      );
       const dashboardSlug = departmentToDashboardSlug[employee.department];
       navigate(
         dashboardSlug

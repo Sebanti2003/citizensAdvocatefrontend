@@ -13,7 +13,10 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { getAllComplaints } from "../../utils/complaintsStorage";
+import {
+  getAllComplaints,
+  subscribeToComplaints,
+} from "../../utils/complaintsStorage";
 
 function CitizenDashboard() {
   const navigate = useNavigate();
@@ -36,7 +39,13 @@ function CitizenDashboard() {
   const [complaints, setComplaints] = useState([]);
 
   useEffect(() => {
-    setComplaints(getAllComplaints());
+    const syncComplaints = () => {
+      setComplaints(getAllComplaints());
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
 
   const filteredComplaints = complaints.filter((complaint) => {

@@ -3,7 +3,13 @@ import { FaSearch, FaUserCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { getAllComplaints } from "../../utils/complaintsStorage";
+import {
+  deleteComplaintById,
+  getAllComplaints,
+  subscribeToComplaints,
+  updateComplaintComment,
+  updateComplaintStatus,
+} from "../../utils/complaintsStorage";
 
 const departmentToConfig = {
   "Ministry of Railways": {
@@ -266,6 +272,9 @@ const slugToConfig = Object.values(departmentToConfig).reduce((acc, item) => {
   return acc;
 }, {});
 
+const normalizeEmployeeId = (value) =>
+  typeof value === "string" ? value.trim().toLowerCase() : "";
+
 function GovernmentEmployeeDashboard() {
   const navigate = useNavigate();
   const { ministrySlug } = useParams();
@@ -273,12 +282,16 @@ function GovernmentEmployeeDashboard() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [complaints, setComplaints] = useState([]);
+  const [expandedComplaintId, setExpandedComplaintId] = useState(null);
+  const [commentModalComplaint, setCommentModalComplaint] = useState(null);
+  const [deleteModalComplaint, setDeleteModalComplaint] = useState(null);
+  const [commentDraft, setCommentDraft] = useState("");
 
   const employeeName =
     localStorage.getItem("employeeName") || "Government Employee";
   const employeeDepartment =
     localStorage.getItem("employeeDepartment") || "";
-  const employeeId = localStorage.getItem("employeeId") || "";
+  const employeeId = normalizeEmployeeId(localStorage.getItem("employeeId"));
   const departmentConfig = departmentToConfig[employeeDepartment];
   const routeConfig = ministrySlug ? slugToConfig[ministrySlug] : null;
   const activeConfig = routeConfig || departmentConfig || null;
@@ -299,8 +312,34 @@ function GovernmentEmployeeDashboard() {
   };
 
   useEffect(() => {
-    setComplaints(getAllComplaints());
+    const syncComplaints = () => {
+      setComplaints(getAllComplaints());
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
+
+  const handleStatusUpdate = (id, newStatus) => {
+    updateComplaintStatus(id, newStatus);
+  };
+
+  const saveComment = () => {
+    if (!commentModalComplaint) return;
+    updateComplaintComment(commentModalComplaint.id, commentDraft.trim());
+    setCommentModalComplaint(null);
+    setCommentDraft("");
+  };
+
+  const confirmDeleteComplaint = () => {
+    if (!deleteModalComplaint) return;
+    deleteComplaintById(deleteModalComplaint.id);
+    setExpandedComplaintId((prev) =>
+      prev === deleteModalComplaint.id ? null : prev
+    );
+    setDeleteModalComplaint(null);
+  };
 
   const filtered = useMemo(() => {
     return complaints.filter((c) => {
@@ -312,7 +351,8 @@ function GovernmentEmployeeDashboard() {
         categoryFilter === "All" || c.category === categoryFilter;
       const ministryMatch = !targetMinistry || c.ministry === targetMinistry;
       const assignedMatch =
-        !!employeeId && c.assignedEmployeeId === employeeId;
+        !!employeeId &&
+        normalizeEmployeeId(c.assignedEmployeeId) === employeeId;
       return (
         matchSearch &&
         matchStatus &&
@@ -330,6 +370,17 @@ function GovernmentEmployeeDashboard() {
       return "bg-yellow-500 text-white shadow-yellow-200";
     return "bg-red-500 text-white shadow-red-200";
   };
+
+  const toggleComplaintDetails = (complaintId) => {
+    setExpandedComplaintId((prev) => (prev === complaintId ? null : complaintId));
+  };
+
+  const formatFieldLabel = (key) =>
+    key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+  const isUrl = (value) =>
+    typeof value === "string" && /^https?:\/\//i.test(value);
+  const isImageUrl = (value) =>
+    isUrl(value) && /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(value);
 
   const handleLogout = async () => {
     try {
@@ -420,6 +471,7 @@ function GovernmentEmployeeDashboard() {
             <motion.div
               key={c.id}
               whileHover={{ scale: 1.02 }}
+              onClick={() => toggleComplaintDetails(c.id)}
               className={`bg-white rounded-2xl shadow-lg p-6 border-l-8 ${theme.cardBorder}`}
             >
               <div className="flex justify-between gap-4">
@@ -438,15 +490,97 @@ function GovernmentEmployeeDashboard() {
                 </div>
 
                 <div className="text-right">
-                  <span
-                    className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(
-                      c.status
-                    )}`}
-                  >
-                    {c.status || "Pending"}
-                  </span>
+                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                    <span
+                      className={`px-4 py-1 rounded-full text-sm font-bold ${statusColor(
+                        c.status
+                      )}`}
+                    >
+                      {c.status || "Pending"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCommentModalComplaint(c);
+                        setCommentDraft(c.ministryComment || "");
+                      }}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-lg"
+                    >
+                      Comment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteModalComplaint(c);
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1 rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="mt-4">
+                    <select
+                      value={c.status || "Pending"}
+                      onChange={(e) => handleStatusUpdate(c.id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="border p-2 rounded-lg text-sm shadow-md"
+                    >
+                      <option>Pending</option>
+                      <option>Under Review</option>
+                      <option>Resolved</option>
+                    </select>
+                  </div>
                 </div>
               </div>
+              <div className={`mt-3 text-xs font-semibold ${theme.categoryText}`}>
+                {expandedComplaintId === c.id
+                  ? "Click card to hide full details"
+                  : "Click card to view full details"}
+              </div>
+              {expandedComplaintId === c.id && (
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">
+                    Complaint Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {Object.entries(c).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200"
+                      >
+                        <div className="text-xs font-semibold text-slate-500">
+                          {formatFieldLabel(key)}
+                        </div>
+                        <div className="text-sm text-slate-800 break-words">
+                          {value === null || value === undefined || value === "" ? (
+                            "-"
+                          ) : isImageUrl(value) ? (
+                            <img
+                              src={value}
+                              alt={formatFieldLabel(key)}
+                              className="mt-1 max-h-40 rounded-md border border-slate-200 object-contain bg-white"
+                            />
+                          ) : isUrl(value) ? (
+                            <a
+                              href={value}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View attachment
+                            </a>
+                          ) : (
+                            String(value)
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
 
@@ -457,6 +591,71 @@ function GovernmentEmployeeDashboard() {
           )}
         </div>
       </div>
+
+      {commentModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Add Comment</h3>
+            <p className="text-sm text-gray-500 mb-4">{commentModalComplaint.title}</p>
+            <textarea
+              value={commentDraft}
+              onChange={(e) => setCommentDraft(e.target.value)}
+              placeholder="Write ministry comment..."
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCommentModalComplaint(null);
+                  setCommentDraft("");
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveComment}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Save Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Delete Complaint</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Are you sure you want to delete this complaint?
+            </p>
+            <p className="text-sm font-semibold text-gray-800 mb-5">
+              {deleteModalComplaint.title}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalComplaint(null)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteComplaint}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

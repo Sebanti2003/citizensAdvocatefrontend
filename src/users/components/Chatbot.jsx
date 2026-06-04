@@ -5,17 +5,17 @@ import { MessageCircle, X, Send } from "lucide-react";
 const quickReplies = [
   {
     q: "How do I file a complaint?",
-    a: "Filing a complaint is easy:\n1. Click '📢 File a Complaint' on the home page.\n2. Sign up or log in as a citizen.\n3. From your dashboard, click '+ Post Complaint'.\n4. Select the relevant ministry.\n5. Fill in the details and submit.\nYou will receive a reference ID to track progress.",
+    a: "Filing a complaint is easy:\n1. Click 'File a Complaint' on the home page.\n2. Sign up or log in as a citizen.\n3. From your dashboard, click '+ Post Complaint'.\n4. Select the relevant ministry.\n5. Fill in the details and submit.\nYou will receive a reference ID to track progress.",
     keys: ["file", "post", "submit", "complaint", "how"],
   },
   {
     q: "Which ministries are covered?",
-    a: "We currently route grievances to 6 ministries:\n• Ministry of Railways\n• Ministry of Road Transport & Highways\n• Ministry of Consumer Affairs, Food & PD\n• Ministry of Health & Family Welfare\n• Ministry of Women & Child Development\n• Ministry of Education",
+    a: "We currently route grievances to 6 ministries:\n- Ministry of Railways\n- Ministry of Road Transport & Highways\n- Ministry of Consumer Affairs, Food & PD\n- Ministry of Health & Family Welfare\n- Ministry of Women & Child Development\n- Ministry of Education",
     keys: ["ministry", "ministries", "department", "covered", "list"],
   },
   {
     q: "How can I track my complaint?",
-    a: "Log in to your Citizen Dashboard. All complaints you've filed appear there with live status — Submitted, Pending, Under Review, or Resolved. You can also filter by ministry or status.",
+    a: "Log in to your Citizen Dashboard. All complaints you've filed appear there with live status - Pending, Under Review, or Resolved. You can also filter by ministry or status.",
     keys: ["track", "status", "progress", "update"],
   },
   {
@@ -43,7 +43,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       from: "bot",
-      text: "Namaste 🙏 I'm your Citizens' Advocate assistant. How can I help you today?",
+      text: "Namaste, I'm your Citizens' Advocate assistant. How can I help you today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -66,7 +66,6 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Launcher Button */}
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
@@ -77,7 +76,6 @@ export default function Chatbot() {
         {open ? <X size={26} /> : <MessageCircle size={26} />}
       </motion.button>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -87,7 +85,6 @@ export default function Chatbot() {
             transition={{ duration: 0.25 }}
             className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 h-[28rem] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
           >
-            {/* Header */}
             <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-4 py-3 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
                 <MessageCircle size={18} className="text-white" />
@@ -98,10 +95,15 @@ export default function Chatbot() {
               </div>
             </div>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2 bg-gray-50">
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto px-3 py-3 space-y-2 bg-gray-50"
+            >
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={i}
+                  className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}
+                >
                   <div
                     className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs whitespace-pre-line leading-relaxed ${
                       m.from === "user"
@@ -115,7 +117,6 @@ export default function Chatbot() {
               ))}
             </div>
 
-            {/* Quick Replies */}
             <div className="px-3 py-2 border-t border-gray-200 bg-white flex flex-wrap gap-1.5">
               {quickReplies.slice(0, 3).map((r, i) => (
                 <button
@@ -128,7 +129,6 @@ export default function Chatbot() {
               ))}
             </div>
 
-            {/* Input */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();

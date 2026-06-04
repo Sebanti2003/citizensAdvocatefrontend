@@ -7,6 +7,7 @@ import {
   assignComplaintsToEmployee,
   deleteComplaintById,
   getAllComplaints,
+  subscribeToComplaints,
   transferComplaintsToMinistry,
   updateComplaintComment,
   updateComplaintStatus,
@@ -57,10 +58,16 @@ function RoadSafetyAndHighways() {
   ];
 
   useEffect(() => {
-    const roadComplaints = getAllComplaints().filter(
-      (complaint) => complaint.ministry === "Road Transport"
-    );
-    setComplaints(roadComplaints);
+    const syncComplaints = () => {
+      const roadComplaints = getAllComplaints().filter(
+        (complaint) => complaint.ministry === "Road Transport"
+      );
+      setComplaints(roadComplaints);
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
   useEffect(() => {
     const fetchEmployees = async () => {

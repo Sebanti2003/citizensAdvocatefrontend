@@ -7,6 +7,7 @@ import {
   assignComplaintsToEmployee,
   deleteComplaintById,
   getAllComplaints,
+  subscribeToComplaints,
   transferComplaintsToMinistry,
   updateComplaintComment,
   updateComplaintStatus,
@@ -57,10 +58,16 @@ function MinistryofEducation() {
   ];
 
   useEffect(() => {
-    const educationComplaints = getAllComplaints().filter(
-      (complaint) => complaint.ministry === "Education"
-    );
-    setComplaints(educationComplaints);
+    const syncComplaints = () => {
+      const educationComplaints = getAllComplaints().filter(
+        (complaint) => complaint.ministry === "Education"
+      );
+      setComplaints(educationComplaints);
+    };
+
+    syncComplaints();
+
+    return subscribeToComplaints(syncComplaints);
   }, []);
   useEffect(() => {
     const fetchEmployees = async () => {
