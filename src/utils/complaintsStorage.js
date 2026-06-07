@@ -2,6 +2,8 @@ const STORAGE_KEY = "citizen_advocate_complaints_v1";
 const STORAGE_EVENT = "citizen-advocate-complaints-updated";
 const normalizeEmployeeId = (value) =>
   typeof value === "string" ? value.trim().toLowerCase() : "";
+const normalizeOwnerValue = (value) =>
+  typeof value === "string" ? value.trim().toLowerCase() : "";
 const normalizeComplaintStatus = (value) =>
   value === "Submitted" ? "Pending" : value;
 const normalizeComplaint = (complaint) => ({
@@ -81,6 +83,36 @@ export const addComplaint = (complaint) => {
   const next = [normalizeComplaint(complaint), ...all];
   saveAllComplaints(next);
   return next;
+};
+
+export const getComplaintsForOwner = ({
+  ownerUserId = "",
+  ownerEmail = "",
+  ownerName = "",
+} = {}) => {
+  const normalizedUserId = normalizeOwnerValue(ownerUserId);
+  const normalizedEmail = normalizeOwnerValue(ownerEmail);
+  const normalizedName = normalizeOwnerValue(ownerName);
+
+  return getAllComplaints().filter((complaint) => {
+    const complaintUserId = normalizeOwnerValue(complaint.ownerUserId);
+    const complaintEmail = normalizeOwnerValue(complaint.ownerEmail);
+    const complaintName = normalizeOwnerValue(complaint.ownerName);
+
+    if (normalizedUserId && complaintUserId) {
+      return complaintUserId === normalizedUserId;
+    }
+
+    if (normalizedEmail && complaintEmail) {
+      return complaintEmail === normalizedEmail;
+    }
+
+    if (normalizedName && complaintName) {
+      return complaintName === normalizedName;
+    }
+
+    return false;
+  });
 };
 
 export const updateComplaintStatus = (id, status) => {

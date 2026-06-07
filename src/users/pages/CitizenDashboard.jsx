@@ -14,7 +14,8 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
-  getAllComplaints,
+  deleteComplaintById,
+  getComplaintsForOwner,
   subscribeToComplaints,
 } from "../../utils/complaintsStorage";
 
@@ -22,9 +23,14 @@ function CitizenDashboard() {
   const navigate = useNavigate();
   const citizenUsername =
     localStorage.getItem("citizenUsername") || "Registered Citizen";
+  const citizenUserId = localStorage.getItem("citizenUserId") || "";
+  const citizenEmail = localStorage.getItem("citizenEmail") || "";
 
   const [selectedMinistry, setSelectedMinistry] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [expandedComplaintId, setExpandedComplaintId] = useState(null);
+  const [deleteModalComplaint, setDeleteModalComplaint] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
 
   const ministries = [
     "All",
@@ -40,13 +46,19 @@ function CitizenDashboard() {
 
   useEffect(() => {
     const syncComplaints = () => {
-      setComplaints(getAllComplaints());
+      setComplaints(
+        getComplaintsForOwner({
+          ownerUserId: citizenUserId,
+          ownerEmail: citizenEmail,
+          ownerName: citizenUsername,
+        })
+      );
     };
 
     syncComplaints();
 
     return subscribeToComplaints(syncComplaints);
-  }, []);
+  }, [citizenEmail, citizenUserId, citizenUsername]);
 
   const filteredComplaints = complaints.filter((complaint) => {
     const ministryMatch =
@@ -70,6 +82,8 @@ function CitizenDashboard() {
       );
 
       localStorage.removeItem("citizenUsername");
+      localStorage.removeItem("citizenUserId");
+      localStorage.removeItem("citizenEmail");
       navigate("/user/login");
     } catch (error) {
       console.log(error);
@@ -99,6 +113,48 @@ function CitizenDashboard() {
       default:
         return "bg-blue-100 text-blue-700 border border-blue-300";
     }
+  };
+
+  const toggleComplaintDetails = (complaintId) => {
+    setExpandedComplaintId((prev) =>
+      prev === complaintId ? null : complaintId
+    );
+  };
+
+  const formatFieldLabel = (key) =>
+    key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (str) => str.toUpperCase());
+
+  const isUrl = (value) =>
+    typeof value === "string" && /^https?:\/\//i.test(value);
+
+  const isImageUrl = (value) =>
+    isUrl(value) &&
+    /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(value);
+
+  const shouldHideAttachmentField = (complaint, key) => {
+    if (key !== "document") return false;
+
+    const hasPrimaryAttachment =
+      (typeof complaint.idProofUrl === "string" &&
+        complaint.idProofUrl.trim()) ||
+      (typeof complaint.supportingDocumentUrl === "string" &&
+        complaint.supportingDocumentUrl.trim());
+
+    return Boolean(hasPrimaryAttachment);
+  };
+
+  const confirmDeleteComplaint = () => {
+    if (!deleteModalComplaint) return;
+    deleteComplaintById(deleteModalComplaint.id);
+    setComplaints((prev) =>
+      prev.filter((complaint) => complaint.id !== deleteModalComplaint.id)
+    );
+    setExpandedComplaintId((prev) =>
+      prev === deleteModalComplaint.id ? null : prev
+    );
+    setDeleteModalComplaint(null);
   };
 
   return (
@@ -275,7 +331,8 @@ function CitizenDashboard() {
               key={complaint.id}
               whileHover={{ y: -4 }}
               transition={{ duration: 0.2 }}
-              className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden"
+              onClick={() => toggleComplaintDetails(complaint.id)}
+              className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden cursor-pointer"
             >
               {/* Top Bar */}
               <div className="h-2 bg-gradient-to-r from-orange-500 via-white to-green-500"></div>
@@ -302,12 +359,25 @@ function CitizenDashboard() {
                     </p>
                   </div>
 
-                  <div
-                    className={`px-4 py-2 rounded-xl text-sm font-bold ${getStatusStyle(
-                      complaint.status
-                    )}`}
-                  >
-                    {complaint.status}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`px-4 py-2 rounded-xl text-sm font-bold ${getStatusStyle(
+                        complaint.status
+                      )}`}
+                    >
+                      {complaint.status}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteModalComplaint(complaint);
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-2 rounded-lg"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
 
@@ -317,6 +387,72 @@ function CitizenDashboard() {
                     {complaint.description}
                   </p>
                 </div>
+
+                <div className="mt-4 text-xs font-semibold text-indigo-600">
+                  {expandedComplaintId === complaint.id
+                    ? "Click card to hide full details"
+                    : "Click card to view full details"}
+                </div>
+
+                {expandedComplaintId === complaint.id && (
+                  <div className="mt-4 border-t border-gray-200 pt-4">
+                    <h3 className="text-sm font-bold text-gray-700 mb-3">
+                      Complaint Details
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {Object.entries(complaint)
+                        .filter(([key]) =>
+                          !shouldHideAttachmentField(complaint, key)
+                        )
+                        .map(([key, value]) => (
+                          <div
+                            key={key}
+                            className="bg-slate-50 rounded-xl px-3 py-3 border border-slate-200"
+                          >
+                            <div className="text-xs font-semibold text-slate-500">
+                              {formatFieldLabel(key)}
+                            </div>
+
+                            <div className="text-sm text-slate-800 break-words mt-1">
+                              {value === null ||
+                              value === undefined ||
+                              value === "" ? (
+                                "-"
+                              ) : isImageUrl(value) ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPreviewImageUrl(value);
+                                  }}
+                                  className="mt-1"
+                                >
+                                  <img
+                                    src={value}
+                                    alt={formatFieldLabel(key)}
+                                    className="max-h-40 rounded-md border border-slate-200 object-contain bg-white"
+                                  />
+                                </button>
+                              ) : isUrl(value) ? (
+                                <a
+                                  href={value}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-blue-600 hover:underline"
+                                >
+                                  View attachment
+                                </a>
+                              ) : (
+                                String(value)
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
 
                 {complaint.ministryComment && (
                   <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-xl p-4">
@@ -353,6 +489,55 @@ function CitizenDashboard() {
           </div>
         )}
       </div>
+
+      {deleteModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Delete Complaint
+            </h3>
+
+            <p className="text-sm text-gray-500">
+              This will remove the complaint from your local dashboard.
+            </p>
+
+            <p className="text-sm font-semibold text-gray-800 mt-3">
+              {deleteModalComplaint.title}
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteModalComplaint(null)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDeleteComplaint}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImageUrl("")}
+        >
+          <img
+            src={previewImageUrl}
+            alt="Full preview"
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        </div>
+      )}
     </div>
   );
 }

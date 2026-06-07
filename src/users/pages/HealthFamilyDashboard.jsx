@@ -178,6 +178,9 @@ function HealthFamilyDashboard() {
       hospitalname: complaint.hospitalname,
       source: "client",
       createdAt: new Date().toISOString(),
+      ownerName: localStorage.getItem("citizenUsername") || "",
+      ownerUserId: localStorage.getItem("citizenUserId") || "",
+      ownerEmail: localStorage.getItem("citizenEmail") || "",
     };
 
     let uploadedIdProofUrl = "";
@@ -207,6 +210,7 @@ function HealthFamilyDashboard() {
       uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
       uploadedSupportingDocumentUrl =
         response?.data?.complaint?.supportingDocumentUrl || "";
+      localComplaint.backendId = response?.data?.complaint?._id || "";
     } catch (error) {
       console.error("Health complaint API failed; storing client-side.", error);
     }

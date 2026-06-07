@@ -321,8 +321,8 @@ function GovernmentEmployeeDashboard() {
     return subscribeToComplaints(syncComplaints);
   }, []);
 
-  const handleStatusUpdate = (id, newStatus) => {
-    updateComplaintStatus(id, newStatus);
+  const handleStatusUpdate = (complaint, newStatus) => {
+    updateComplaintStatus(complaint.id, newStatus);
   };
 
   const saveComment = () => {
@@ -523,7 +523,7 @@ function GovernmentEmployeeDashboard() {
                   <div className="mt-4">
                     <select
                       value={c.status || "Pending"}
-                      onChange={(e) => handleStatusUpdate(c.id, e.target.value)}
+                      onChange={(e) => handleStatusUpdate(c, e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                       className="border p-2 rounded-lg text-sm shadow-md"
                     >

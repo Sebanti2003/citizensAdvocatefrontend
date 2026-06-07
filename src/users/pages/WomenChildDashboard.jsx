@@ -174,6 +174,9 @@ function WomenChildDashboard() {
       issuetype: complaint.issuetype,
       source: "client",
       createdAt: new Date().toISOString(),
+      ownerName: localStorage.getItem("citizenUsername") || "",
+      ownerUserId: localStorage.getItem("citizenUserId") || "",
+      ownerEmail: localStorage.getItem("citizenEmail") || "",
     };
 
     let uploadedIdProofUrl = "";
@@ -203,6 +206,7 @@ function WomenChildDashboard() {
       uploadedIdProofUrl = response?.data?.complaint?.idProofUrl || "";
       uploadedSupportingDocumentUrl =
         response?.data?.complaint?.supportingDocumentUrl || "";
+      localComplaint.backendId = response?.data?.complaint?._id || "";
     } catch (error) {
       console.error("Women & Child complaint API failed; storing client-side.", error);
     }

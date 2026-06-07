@@ -44,6 +44,12 @@ function UserLogin() {
       if (displayName) {
         localStorage.setItem("citizenUsername", displayName);
       }
+      if (loggedInUser?._id) {
+        localStorage.setItem("citizenUserId", loggedInUser._id);
+      }
+      if (loggedInUser?.email) {
+        localStorage.setItem("citizenEmail", loggedInUser.email);
+      }
 
       navigate('/user/citizendashboard'); // Redirecting to dashboard after successful login
     } catch (error) {
