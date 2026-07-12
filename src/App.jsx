@@ -24,11 +24,13 @@ import MinistryofConsumerAffairs from './government/pages/MinistryofConsumerAffa
 import MinistryofEducation from './government/pages/MinistryofEducation'
 import GovernmentEmployeeDashboard from './government/pages/GovernmentEmployeeDashboard'
 import EmployeeLogin from './government/pages/EmployeeLogin'
+import { RouteTransitionLoaderProvider } from './components/RouteTransitionLoader'
 
 function App() {
 
   return (
     <BrowserRouter>
+      <RouteTransitionLoaderProvider>
       <Routes>
         {/* User side routes */}
         {/* <Route path="/" element={<LandingPage />} /> */}
@@ -68,6 +70,7 @@ function App() {
         <Route path="/about" element={<h1>About</h1>} />
         <Route path="/contact" element={<h1>Contact</h1>} />
       </Routes>
+      </RouteTransitionLoaderProvider>
     </BrowserRouter>
   )
 }

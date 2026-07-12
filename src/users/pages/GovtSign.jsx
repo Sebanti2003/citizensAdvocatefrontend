@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRouteTransitionLoader } from '../../components/RouteTransitionLoader';
 
 const departments = [
   { name: 'Ministry of Railways', id: 'RAIL001' },
@@ -13,6 +14,7 @@ const departments = [
 
 function GovtSign() {
   const navigate = useNavigate();
+  const { showRouteLoader } = useRouteTransitionLoader();
 
   const [departmentalname, setDepartmentName] = useState('');
   const [departmentalid, setDepartmentId] = useState('');
@@ -46,6 +48,7 @@ function GovtSign() {
 
       console.log(response.data);
 
+      showRouteLoader('/govt/login');
       navigate('/govt/login');
 
       // Reset fields

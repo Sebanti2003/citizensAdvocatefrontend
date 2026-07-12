@@ -390,6 +390,9 @@ function GovernmentEmployeeDashboard() {
     } catch (error) {
       console.log(error);
     } finally {
+      localStorage.removeItem("employeeName");
+      localStorage.removeItem("employeeDepartment");
+      localStorage.removeItem("employeeId");
       navigate("/govt/employee/login");
     }
   };
@@ -586,7 +589,9 @@ function GovernmentEmployeeDashboard() {
 
           {!filtered.length && (
             <div className="bg-white rounded-2xl shadow p-6 text-gray-500">
-              No complaints found.
+              {employeeId
+                ? "No complaints transferred to this employee yet."
+                : "No employee session found. Please log in again."}
             </div>
           )}
         </div>

@@ -136,12 +136,14 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouteTransitionLoader } from "../../components/RouteTransitionLoader";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(window.scrollY);
   const navigate=useNavigate();
+  const { showRouteLoader } = useRouteTransitionLoader();
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY.current) {
@@ -180,6 +182,12 @@ const Navbar = () => {
     { name: "FAQ", id: "faq" },
     { name: "Contact", id: "contact" },
   ];
+
+  const openRouteWithLoader = (path) => {
+    showRouteLoader(path);
+    navigate(path);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <motion.nav
@@ -268,12 +276,12 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <div
-            onClick={()=>{navigate('/govt/employee/login')}} className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
+            onClick={() => openRouteWithLoader('/govt/employee/login')} className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
           >
             Employee Dashboard
           </div>
           <div
-            onClick={()=>{navigate('/govt/login')}} className="px-3 py-1 bg-orange-500 text-white rounded-md text-xs hover:bg-orange-600"
+            onClick={() => openRouteWithLoader('/govt/login')} className="px-3 py-1 bg-orange-500 text-white rounded-md text-xs hover:bg-orange-600"
           >
             🏛️ Government Login
           </div>
@@ -300,20 +308,20 @@ const Navbar = () => {
               {item.name}
             </button>
           ))}
-          <a
-            href="/user/selectcategory"
+          <button
+            type="button"
             className="px-3 py-1 bg-orange-500 text-white rounded-md text-center text-xs hover:bg-orange-600 font-semibold"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => openRouteWithLoader('/user/selectcategory')}
           >
             📢 File a Complaint
-          </a>
-          <a
-            href="/govt/login"
+          </button>
+          <button
+            type="button"
             className="px-3 py-1 bg-orange-500 text-white rounded-md text-center text-xs hover:bg-orange-600 font-semibold"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => openRouteWithLoader('/govt/login')}
           >
             🏛️ Government Login
-          </a>
+          </button>
         </div>
       )}
     </motion.nav>

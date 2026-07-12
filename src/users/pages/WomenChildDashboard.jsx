@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { addComplaint } from "../../utils/complaintsStorage";
 
 function WomenChildDashboard() {
+  const navigate = useNavigate();
   const serviceData = {
     101: "Delhi Women's Commission",
     202: "Mumbai Women's Support Center",
@@ -230,6 +232,7 @@ function WomenChildDashboard() {
     setTimeout(() => {
       setSuccessMessage("");
       setErrorMessage("");
+      navigate("/user/citizendashboard");
     }, 3000);
   };
 
@@ -251,22 +254,35 @@ function WomenChildDashboard() {
         </motion.h1>
 
         {/* Complaint Form */}
+        {successMessage ? (
+          <motion.div
+            className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mb-6 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-700">
+              ✓
+            </div>
+            <h2 className="text-2xl font-semibold text-green-700">
+              Complaint submitted successfully.
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Redirecting to your citizen dashboard...
+            </p>
+          </motion.div>
+        ) : (
         <motion.div
           className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {(successMessage || errorMessage) && (
+          {errorMessage && (
             <motion.div
-              className={`mb-3 p-2 rounded-lg text-center ${
-                successMessage
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
+              className="mb-3 rounded-lg bg-red-100 p-2 text-center text-red-700"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              {successMessage || errorMessage}
+              {errorMessage}
             </motion.div>
           )}
 
@@ -403,6 +419,7 @@ function WomenChildDashboard() {
             </button>
           </form>
         </motion.div>
+        )}
 
         {/* Ongoing Public Complaints */}
         <motion.div

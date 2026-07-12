@@ -28,6 +28,7 @@ function RoadSafetyAndHighways() {
   const [isAssignMode, setIsAssignMode] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [showEmployeeView, setShowEmployeeView] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [expandedComplaintId, setExpandedComplaintId] = useState(null);
   const [commentModalComplaint, setCommentModalComplaint] = useState(null);
@@ -111,6 +112,26 @@ function RoadSafetyAndHighways() {
       return matchSearch && matchStatus && matchCategory;
     });
   }, [complaints, search, statusFilter, categoryFilter]);
+
+  const employeeComplaintGroups = useMemo(() => {
+    return employees.map((employee) => {
+      const normalizedId = String(employee.employeeId || "")
+        .trim()
+        .toLowerCase();
+
+      const employeeComplaints = complaints.filter(
+        (complaint) =>
+          String(complaint.assignedEmployeeId || "")
+            .trim()
+            .toLowerCase() === normalizedId
+      );
+
+      return {
+        employee,
+        complaints: employeeComplaints,
+      };
+    });
+  }, [complaints, employees]);
 
   const statusColor = (status) => {
     if (status === "Resolved")
@@ -319,6 +340,12 @@ function RoadSafetyAndHighways() {
                 {isAssignMode ? "Cancel Assign" : "Select Employee"}
               </button>
               <button
+                onClick={() => setShowEmployeeView((prev) => !prev)}
+                className="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+              >
+                {showEmployeeView ? "Hide Employee View" : "Employee View"}
+              </button>
+              <button
                 onClick={handleLogout}
                 className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
               >
@@ -329,7 +356,7 @@ function RoadSafetyAndHighways() {
           <p className="text-gray-600">
             Monitor road, transport & highway complaints
           </p>
-          {isTransferMode && (
+          {!showEmployeeView && isTransferMode && (
             <div className="mt-3 flex items-center gap-2">
               <select
                 value={targetMinistry}
@@ -352,7 +379,7 @@ function RoadSafetyAndHighways() {
               </button>
             </div>
           )}
-          {isAssignMode && (
+          {!showEmployeeView && isAssignMode && (
             <div className="mt-3 flex items-center gap-2">
               <select
                 value={selectedEmployeeId}
@@ -377,9 +404,112 @@ function RoadSafetyAndHighways() {
           )}
         </div>
 
-        {/* CARDS */}
-        <div className="grid gap-5">
-          {filtered.map((c) => (
+        {showEmployeeView && (
+          <div className="mb-6 bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">
+                  Employee View
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Road transport employee information
+                </p>
+              </div>
+            </div>
+
+            {employeeComplaintGroups.length ? (
+              <div className="grid gap-4">
+                {employeeComplaintGroups.map(({ employee, complaints: employeeComplaints }) => (
+                  <div
+                    key={employee.employeeId}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+                      <div className="lg:w-80">
+                        <h3 className="text-lg font-bold text-slate-800">
+                          {employee.name}
+                        </h3>
+                        <div className="mt-4 space-y-2 text-sm text-slate-600">
+                          <p><span className="font-semibold text-slate-700">Employee ID:</span> {employee.employeeId || "-"}</p>
+                          <p><span className="font-semibold text-slate-700">Designation:</span> {employee.designation || "-"}</p>
+                          <p><span className="font-semibold text-slate-700">Department:</span> {employee.department || "-"}</p>
+                          <p><span className="font-semibold text-slate-700">Email:</span> {employee.email || "-"}</p>
+                          <p><span className="font-semibold text-slate-700">Phone:</span> {employee.phone || "-"}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                          <h4 className="text-base font-bold text-slate-800">
+                            Addressed Complaints
+                          </h4>
+                          <span className="text-sm font-semibold text-slate-600">
+                            {employeeComplaints.length}
+                          </span>
+                        </div>
+
+                        {employeeComplaints.length ? (
+                          <div className="grid gap-3">
+                            {employeeComplaints.map((complaint) => (
+                              <div
+                                key={complaint.id}
+                                className="rounded-xl border border-white bg-white p-4 shadow-sm"
+                              >
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                                  <div>
+                                    <h5 className="font-semibold text-slate-800">
+                                      {complaint.title}
+                                    </h5>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                      {complaint.category || "-"}
+                                    </p>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                      Complaint ID: #{complaint.id}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className={`px-4 py-1 rounded-full text-sm font-bold w-fit ${statusColor(
+                                      complaint.status
+                                    )}`}
+                                  >
+                                    {complaint.status}
+                                  </span>
+                                </div>
+
+                                {complaint.ministryComment && (
+                                  <div className="mt-3 rounded-lg bg-indigo-50 border border-indigo-100 p-3">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">
+                                      Latest Comment
+                                    </p>
+                                    <p className="text-sm text-indigo-900 mt-1">
+                                      {complaint.ministryComment}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-500">
+                            No complaints assigned to this employee yet.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+                No employees found for this ministry yet.
+              </div>
+            )}
+          </div>
+        )}
+
+        {!showEmployeeView && (
+          <div className="grid gap-5">
+            {filtered.map((c) => (
             <motion.div
               key={c.id}
               whileHover={{ scale: 1.02 }}
@@ -547,8 +677,9 @@ function RoadSafetyAndHighways() {
                 </div>
               )}
             </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {previewImageUrl && (

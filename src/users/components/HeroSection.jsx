@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useRouteTransitionLoader } from "../../components/RouteTransitionLoader";
 
 const ministryInfo = [
   {
@@ -38,8 +39,10 @@ const ministryInfo = [
 export default function HeroSection() {
   const navigate = useNavigate();
   const [showInfo, setShowInfo] = useState(false);
+  const { showRouteLoader } = useRouteTransitionLoader();
 
   const handleFileComplaint = () => {
+    showRouteLoader('/user/login');
     navigate('/user/login');
   };
 
